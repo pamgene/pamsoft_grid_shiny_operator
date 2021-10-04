@@ -51,10 +51,17 @@ shinyUI(
                               Shiny.setInputValue('mouseup', 0);
                             });
                                          ")) )),
+        fluidRow( column(6, disabled(actionButton("prevGridBtn", label = "<< Prev. Grid"  )),
+                         disabled(actionButton("prevGridBtn", label = "< Prev. Image"  )),
+                         actionButton("prevGridBtn", label = "Next Image >"  ),
+                         actionButton("prevGridBtn", label = "Next Grid >>"  ) )
+                  
+                  ),
+        br(),
         fluidRow( column(3,
            sliderInput("brightness", "Brightness",
                         min = -0.5, max = 0.5, ticks=FALSE, 
-                        value = 0, step = 0.05) ),
+                        value = 0, step = 0.01) ),
             
             
             column(3, sliderInput("contrast", "Contrast",
@@ -67,9 +74,12 @@ shinyUI(
                             ),
                      column(2, 
                             tags$div(title="Save all grid position changes", 
-                                     actionButton("saveBtn", label = "Save Changes"  ))
-                            ),  
-            textOutput("mouseup"))
+                                     disabled(actionButton("runBtn", label = "Run"  )))
+                            )),  
+        
+        # THOSE Are debug lines. Either enter a switch for those, or 
+            fluidRow( column(6,textOutput("mouseup")) ),
+            fluidRow( column(4,textOutput("opMode")) )
       )          
       
             
