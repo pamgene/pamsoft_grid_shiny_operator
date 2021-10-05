@@ -51,10 +51,11 @@ shinyUI(
                               Shiny.setInputValue('mouseup', 0);
                             });
                                          ")) )),
+        fluidRow(column(6, textOutput("currentGrid") )),
         fluidRow( column(6, disabled(actionButton("prevGridBtn", label = "<< Prev. Grid"  )),
-                         disabled(actionButton("prevGridBtn", label = "< Prev. Image"  )),
-                         actionButton("prevGridBtn", label = "Next Image >"  ),
-                         actionButton("prevGridBtn", label = "Next Grid >>"  ) )
+                         disabled(actionButton("prevImgBtn", label = "< Prev. Image"  )),
+                         actionButton("nextImgBtn", label = "Next Image >"  ),
+                         actionButton("nextGridBtn", label = "Next Grid >>"  ) )
                   
                   ),
         br(),
