@@ -9,8 +9,8 @@ library(stringr)
 library(tiff)
 
 
-#options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
-#options("tercen.stepId"= "14ed29d4-9072-4305-baf7-433174aa6829")
+options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
+options("tercen.stepId"= "14ed29d4-9072-4305-baf7-433174aa6829")
 
 
 ############################################
@@ -163,11 +163,17 @@ shinyServer(function(input, output, session) {
     req(imgInfo)
     req(imageSelection$imageIdx)
     
+    m <- mode()
+    
     if(is.null(df$data)){
       df$data <- get_data(session)
     }
     
+    if( !is.null(m) && m == "run"){
+      shinyjs::enable("runBtn")
+    }
     
+
     outfile <- tempfile(fileext = '.jpeg', tmpdir = imgDir)
     
     selection$image <- imageList()[[1]][imageSelection$imageIdx]
@@ -315,7 +321,7 @@ shinyServer(function(input, output, session) {
     }
     
 
-    if(imageSelection$imageIdx < nrow(imageChoiceList$data) && imageSelection$gridIdx < length(gridImageList())){
+    if(imageSelection$imageIdx < nrow(imageChoiceList$data) || imageSelection$gridIdx < length(gridImageList())){
       shinyjs::enable( "nextImgBtn"  )
     }else{
       shinyjs::disable( "nextImgBtn"  )
