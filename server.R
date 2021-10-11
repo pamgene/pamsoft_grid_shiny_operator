@@ -9,11 +9,8 @@ library(stringr)
 library(tiff)
 
 
-OP_DEBUG <- TRUE
-
-
-options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
-options("tercen.stepId"= "14ed29d4-9072-4305-baf7-433174aa6829")
+#options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
+#options("tercen.stepId"= "14ed29d4-9072-4305-baf7-433174aa6829")
 
 
 ############################################
@@ -134,143 +131,110 @@ shinyServer(function(input, output, session) {
   imageChoiceList <- reactiveValues(data=NULL)
   imageSelection <- reactiveValues( imageIdx=1, gridIdx=1 )
   
-  mode = reactive({getMode(session)})
+  newGridPos <- reactiveValues(X=NULL, Y=NULL)
+
+  mode      <- reactive({getMode(session)})
   
-  grid    <- reactiveValues(X=NULL, Y=NULL)
-  df <- reactiveValues( data=NULL  )
+  grid      <- reactiveValues(X=NULL, Y=NULL)
+  df        <- reactiveValues( data=NULL  )
   selection <- reactiveValues( image=NULL  )
   
   
-  docId  <-reactive( get_document_id(session)  )
+  docId   <- reactive( get_document_id(session)  )
   imgInfo <- reactive(prep_image_folder(session, docId)  )
   
   selection <- reactiveValues(img=NULL)
   
+  imgDir <- tempdir(check=TRUE)
   
+  
+
   imageList <- reactive(get_image_list(session, gridImageList()[[imageSelection$gridIdx]] ))
-  outfile <- '/tmp/grid.png' #tempfile(fileext = '.png')
   dtImageList <- reactive( imageChoiceList$data )
   # END OF SERVER VARIABLES DEFINITION
   # +++++++++
   
-  
-  
-  if(OP_DEBUG == TRUE){
-    output$opMode <- renderText( paste0("Mode is: ", mode() ) )
-  }
-  
-  
+  output$opMode <- renderText({
+    paste0("Mode is: ", getMode(session) ) 
+    })
+
   
   output$selectedImage <- renderImage({
-    m = mode()
-
-    
-    if (!is.null(m) && m == 'run'){
-      # Only available in 'run' mode
-      shinyjs::enable("runBtn")
-      shinyjs::enable("applyBtn")
-    }
-    
+    req(imgInfo)
+    req(imageSelection$imageIdx)
     
     if(is.null(df$data)){
-        df$data <- get_data(session)
+      df$data <- get_data(session)
     }
-
-    #clk <- Clicked()
-    #if(is.null(clk)){
-    #  clk <- 1
-    #}
     
-    print("Rendering image")
     
+    outfile <- tempfile(fileext = '.jpeg', tmpdir = imgDir)
     
     selection$image <- imageList()[[1]][imageSelection$imageIdx]
+    selectedImage <- paste0( imgInfo()[1], '/', selection$image, '.', imgInfo()[2] )
     
     dfImg <- reactive(df$data %>% filter(Image == selection$image ) )
-
     
-    grid$X <- reactive(dfImg() %>% filter(variable == "gridX") %>% pull(.y))
-    grid$Y <- reactive(dfImg() %>% filter(variable == "gridY") %>% pull(.y))
+    grid$Y <- reactive(dfImg() %>% filter(variable == "gridX") %>% pull(.y))
+    grid$X <- reactive(dfImg() %>% filter(variable == "gridY") %>% pull(.y))
     
-    #selectedImage <- imageList()[[1]][clk]
-    selectedImage <- paste0( imgInfo()[1], '/', selection$image, '.', imgInfo()[2] )
-     
     # Generate the PNG
+    # CHANGE BACK
     bf <- as.double(input$brightness)
     ct <- as.double(input$contrast)
-    img <- suppressWarnings( readTIFF(selectedImage) * 16 )
-    img <- add.colour(as.cimg(aperm(img, c(2,1))))
-  
+    img <- drop(suppressWarnings( tiff::readTIFF(selectedImage) * 16 ))
+    # Change to width x height
+    img <- as.cimg(aperm(img, c(2,1)))
     
     img <- img / max(img)
-    img <- img + bf
     
-    img <- ct * (img - 0.5) + 0.5
-    img <- overlay_grid(img, grid$X(), grid$Y())
-    
+    img <- ct * ((img + bf) - 0.5) + 0.5
 
     img[img > 1] = 1
-    img[img < 0]  = 0
+    img[img < 0] = 0
 
     imager::save.image(img,outfile)
     
-  #  # Return a list containing the filename
+
     list(src = outfile,
-         contentType = 'image/png',
+         id = "gridImage",
+         contentType = 'image/jpeg',
          alt = "Grid image could not be loaded.")
   }, deleteFile = TRUE)
   
   
+  observe({
+    spotPitch <- 21.5
+    spotSize <- 0.66
+    off <- (spotPitch * spotSize)/2
+    
+    x <- grid$X()
+    y <- grid$Y()
+    r <- rep( off, length(x) )
+    
+    df <- data.frame(x=x, y=y, radius=r)
+    session$sendCustomMessage("imageDisplay", df)
 
-  
-  observeEvent(input$mouseup, {
-    if(input$mouseup == 1){
-      if(OP_DEBUG == TRUE){
-        output$mouseup <- renderText(
-          paste0('Dragged mouse from (',
-                 input$xDwn, ',', input$yDwn, 
-                 ') to (', input$x, ',', input$y, ')' )
-        )
-      }
-
-      #UPDATE Grid position
-      gX <- grid$X()
-      gY <- grid$Y()
-      
-      dY <- input$x - input$xDwn
-      dX <- input$y - input$yDwn
-      
-      selectedSpot <- -1
-      
-      for(i in seq_along(gX)){
-        center_x <- gX[i]
-        center_y <- gY[i]
-        
-        if( is_in_circle(center_x, center_y, input$yDwn, input$xDwn, 4)){
-          selectedSpot <- i
-          
-        }
-      }
-
-      if( dX != 0 || dY != 0){
-        if(selectedSpot > -1 ){
-          gY[selectedSpot] <- gY[selectedSpot] + dY
-          gX[selectedSpot] <- gX[selectedSpot] + dX
-        }else{
-          gY <- gY + dY
-          gX <- gX + dX
-        }
-        
-        # Update df
-        d <- isolate(df$data)
-
-        d$.y[d$variable == "gridX" & d$Image == selection$image] <- gX
-        d$.y[d$variable == "gridY" & d$Image == selection$image] <- gY
-  
-        df$data <- d
-      }
-    }
   })
+  
+  
+  observeEvent(input$gridOverlay, {
+    N <- length(input$gridOverlay)
+    gridInput<-as.vector(input$gridOverlay)
+    
+
+    X <- gridInput[seq.int(1, N, by = 5)]
+    Y <- gridInput[seq.int(2, N, by = 5)]
+    
+    data <- df$data
+    
+    data$.y[data$variable == "gridX" & data$Image == selection$image] <- Y
+    data$.y[data$variable == "gridY" & data$Image == selection$image] <- X
+    
+    df$data <- data
+  })
+  
+
   
   #+++++++++++++++++++++++++++++++++++++++++++++++++
   # Image and Grid button events (previous and next)
@@ -283,7 +247,6 @@ shinyServer(function(input, output, session) {
       shinyjs::enable( "nextGridBtn"  )
     }
     
-
     shiny::updateSelectInput(session = session, 
                              inputId = "imagedused", 
                              selected=gridImageList()[imageSelection$gridIdx], 
@@ -314,6 +277,8 @@ shinyServer(function(input, output, session) {
   
   
   observeEvent(input$nextImgBtn, {
+
+    #grid$X <- newGridPos$X
     imageSelection$imageIdx <- imageSelection$imageIdx+1
     
     # From last image of a grid, jump to the first image of the subsequent grid
@@ -321,7 +286,7 @@ shinyServer(function(input, output, session) {
       imageSelection$imageIdx <- 1
       imageSelection$gridIdx <- imageSelection$gridIdx + 1
       
-      if(imageSelection$gridIdx == length( gridImageList()) ){
+      if(imageSelection$gridIdx == length( gridImageList()) && imageSelection$gridIdx == length( gridImageList())){
         shinyjs::disable( "nextGridBtn"  )
       }else{
         shinyjs::enable( "nextGridBtn"  )
@@ -344,9 +309,12 @@ shinyServer(function(input, output, session) {
     
     if( imageSelection$gridIdx > 1 ){
       shinyjs::enable( "prevGridBtn"  )
+      shinyjs::disable( "applyBtn"  )
+    }else{
+      shinyjs::enable( "applyBtn"  )
     }
     
-    
+
     if(imageSelection$imageIdx < nrow(imageChoiceList$data) && imageSelection$gridIdx < length(gridImageList())){
       shinyjs::enable( "nextImgBtn"  )
     }else{
@@ -378,15 +346,18 @@ shinyServer(function(input, output, session) {
       
       dtImageList <- reactive( imageChoiceList$data )
     }
-    
-    
-    # Test if previous/next buttons need to be disabled
-    if(imageSelection$imageIdx == 1 && imageSelection$gridIdx == 1){
-      shinyjs::disable( "prevGridBtn"  )
-      shinyjs::disable( "prevImgBtn"  )
-    }else{
-      shinyjs::enable( "prevImgBtn"  )
-    }
+    if(imageSelection$imageIdx == 1){
+      shinyjs::enable( "applyBtn"  )
+      # Test if previous/next buttons need to be disabled
+      if( imageSelection$gridIdx == 1){
+        shinyjs::disable( "prevGridBtn"  )
+        shinyjs::disable( "prevImgBtn"  )
+      }else{
+        shinyjs::enable( "prevImgBtn"  )
+      }
+    } else{
+      shinyjs::disable( "applyBtn"  )
+    } 
   } ) # END OF prevImgBtn event
   
   # END of Image and Grid button events
@@ -401,8 +372,10 @@ shinyServer(function(input, output, session) {
       shinyjs::disable( "prevGridBtn"  )
       if(imageSelection$imageIdx == 1){
         shinyjs::disable( "prevImgBtn"  )
+        shinyjs::enable( "applyBtn"  )
       }else{
         shinyjs::enable( "prevImgBtn"  )
+        shinyjs::disable( "applyBtn"  )
       }
 
     }else{
@@ -439,6 +412,12 @@ shinyServer(function(input, output, session) {
     }
     
     
+    if(as.numeric(input$selectedImageRow) == 1){
+      shinyjs::enable( "applyBtn"  )
+    }else{
+      shinyjs::disable( "applyBtn"  ) 
+    }
+    
     if( imageSelection$gridIdx == 1){
       
       shinyjs::disable( "prevGridBtn"  )
@@ -446,8 +425,10 @@ shinyServer(function(input, output, session) {
       
       if(as.numeric(input$selectedImageRow) == 1){
         shinyjs::disable( "prevImgBtn"  )
+        
       }else{
         shinyjs::enable( "prevImgBtn"  )
+        
       }
     }else{
       shinyjs::enable( "prevGridBtn"  )
@@ -464,13 +445,7 @@ shinyServer(function(input, output, session) {
   })
   
 
-  output$currentGrid <- renderText(paste0( "CURRENT GRID: ", input$imagedused  )  )
-  
-  
-  
-  
-  output$images <-
-    renderDataTable( {
+  output$images <- renderDataTable( {
       
       DT::datatable( data=dtImageList(), 
                  selection=list(mode="single", selected=imageSelection$imageIdx),
@@ -485,37 +460,36 @@ shinyServer(function(input, output, session) {
     })
   
 
-  
-  #Clicked <- eventReactive(imageSelection$imageIdx,{
-    #input$images_rows_selected
-    
-    #imageSelection$imageIdx <- input$images_rows_selected 
-    
-    # MIGHT BE UNUSED
-    # selection$img <- input$images_rows_selected 
-  #})
-  
-  
-  observeEvent( selection$img, {
-    if(imageList()[[1]][selection$img] == input$imagedused && !is.null(mode()) && mode() == "run"){
-      enable("applyBtn")
-    }else{
-      disable("applyBtn")
-    }
-
-  } )
-  
-  #observeEvent( input$imagedused, {disable("applyBtn")} )
+#  observeEvent( selection$img, {
+#    if(imageList()[[1]][selection$img] == input$imagedused && !is.null(mode()) && mode() == "run"){
+#      enable("runBtn")
+#    }else{
+#      disable("runBtn")
+#    }
+#
+#  } )
   
 
   observeEvent( input$applyBtn, {
-    print("TBD")
-    } )
+    isolate({
+      data <- df$data
+      associatedImages <- unique(data$Image[data$grdImageNameUsed == selection$image])
+
+        for(img in associatedImages){    
+          data <- df$data
+          data$.y[data$variable == "gridX" & data$Image == img] <- grid$Y()
+          data$.y[data$variable == "gridY" & data$Image == img] <- grid$X()
+          
+          df$data <- data
+        }
+      })
+    
+    grid$X
+    
+  } )
   
   
   observeEvent( input$runBtn, {
-    
-
       progress <- Progress$new(session, min=1, max=1)
       progress$set(message="Running ... please wait ...")
       
@@ -536,13 +510,18 @@ shinyServer(function(input, output, session) {
       })
       
   }) #END observeEvent : input$saveBtn
+  
+  
+  onStop( function(){
+    print("Running clean up code")
+    imInfo <- isolate( imgInfo() )
+    imFolder <- imInfo[[1]][1]
+    zipFolder <- dirname(dirname(imFolder))
+    #print(zipFolder)
+    unlink( zipFolder, recursive=TRUE )
+    unlink( paste0(imgDir, "/*.jpeg"), force=TRUE) 
+  })
 })
-
-
-is_in_circle <- function( center_x, center_y, x, y, r){
-  d <- sqrt((center_x - x)**2 + (center_y - y)**2)
-  return(d<r)
-}
 
 
 remove_variable_ns <- function(varName){
@@ -553,17 +532,6 @@ remove_variable_ns <- function(varName){
 }
 
 
-overlay_grid <- function(img, gridX, gridY){
-
-  c1 <- imager::draw_circle(img*0, gridY, gridX, 8, filled = TRUE, color="green") 
-  c2 <- imager::draw_circle(img*0, gridY, gridX, 6, filled = TRUE, color="green") 
-  
-  circ <- c1-c2
-  
-  img[circ>0] <- circ[circ>0]
-  
-  return(img)
-}
 
 get_image_list <- function(session, imageUsed){
   ctx <- getCtx(session)
