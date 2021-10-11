@@ -9,8 +9,8 @@ library(stringr)
 library(tiff)
 
 
-options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
-options("tercen.stepId"= "14ed29d4-9072-4305-baf7-433174aa6829")
+#options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
+#options("tercen.stepId"= "14ed29d4-9072-4305-baf7-433174aa6829")
 
 
 ############################################
