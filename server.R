@@ -8,9 +8,9 @@ library(DT)
 library(stringr)
 library(tiff)
 
-
+# http://127.0.0.1:5402/admin/w/cff9a1469cd1de708b87bca99f003d42/ds/de38f46b-f300-4168-a8c0-b8cb898407cb
 #options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
-#options("tercen.stepId"= "14ed29d4-9072-4305-baf7-433174aa6829")
+#options("tercen.stepId"= "de38f46b-f300-4168-a8c0-b8cb898407cb")
 
 
 ############################################
@@ -155,7 +155,7 @@ shinyServer(function(input, output, session) {
   # +++++++++
   
   output$opMode <- renderText({
-    paste0("Mode is: ", getMode(session) ) 
+    paste0("Mode is: ", mode() ) 
     })
 
   
@@ -184,8 +184,7 @@ shinyServer(function(input, output, session) {
     grid$Y <- reactive(dfImg() %>% filter(variable == "gridX") %>% pull(.y))
     grid$X <- reactive(dfImg() %>% filter(variable == "gridY") %>% pull(.y))
     
-    # Generate the PNG
-    # CHANGE BACK
+
     bf <- as.double(input$brightness)
     ct <- as.double(input$contrast)
     img <- drop(suppressWarnings( tiff::readTIFF(selectedImage) * 16 ))
@@ -260,7 +259,7 @@ shinyServer(function(input, output, session) {
     
     imageChoiceList$data <- get_image_list(session, gridImageList()[ imageSelection$gridIdx])
     dtImageList <- reactive( imageChoiceList$data )
-  })
+  }) # END OF nextGridBtn event
   
   
   observeEvent(input$prevGridBtn, {
@@ -279,7 +278,7 @@ shinyServer(function(input, output, session) {
     
     imageChoiceList$data <- get_image_list(session, gridImageList()[ imageSelection$gridIdx])
     dtImageList <- reactive( imageChoiceList$data )
-  })
+  }) # END OF prevGridBtn event
   
   
   observeEvent(input$nextImgBtn, {
@@ -517,16 +516,7 @@ shinyServer(function(input, output, session) {
       
   }) #END observeEvent : input$saveBtn
   
-  
-  onStop( function(){
-    print("Running clean up code")
-    imInfo <- isolate( imgInfo() )
-    imFolder <- imInfo[[1]][1]
-    zipFolder <- dirname(dirname(imFolder))
-    #print(zipFolder)
-    unlink( zipFolder, recursive=TRUE )
-    unlink( paste0(imgDir, "/*.jpeg"), force=TRUE) 
-  })
+
 })
 
 
