@@ -3,5 +3,6 @@
   "description": "Operator used to inspect and adjust gridding.",
   "tags": ["pamsoft", "grid"],
   "authors": ["tercen"],
-  "urls": ["https://github.com/tercen/pamsoft_grid_shiny_operator"]
+  "urls": ["https://github.com/tercen/pamsoft_grid_shiny_operator"],
+  "isViewOnly": false
 }
