@@ -514,7 +514,6 @@ shinyServer(function(input, output, session) {
           inData$.y[ dfIdx   ] <- df$data$.y[dfIdx]
           
           inData %>%
-          select(.ci, .ri, .y ) %>%
           ctx$addNamespace() %>%
           ctx$save()
           progress$close()  
