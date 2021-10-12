@@ -507,6 +507,7 @@ shinyServer(function(input, output, session) {
           ctx <- getCtx(session)
           
           df$data %>%
+          select(.ci, .ri, .y) %>%
           ctx$addNamespace() %>%
           ctx$save()
           progress$close()  
