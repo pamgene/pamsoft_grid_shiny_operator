@@ -9,8 +9,8 @@ library(stringr)
 library(tiff)
 
 # http://127.0.0.1:5402/admin/w/cff9a1469cd1de708b87bca99f003d42/ds/de38f46b-f300-4168-a8c0-b8cb898407cb
-#options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
-#options("tercen.stepId"= "de38f46b-f300-4168-a8c0-b8cb898407cb")
+options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
+options("tercen.stepId"= "de38f46b-f300-4168-a8c0-b8cb898407cb")
 
 
 ############################################
@@ -507,7 +507,8 @@ shinyServer(function(input, output, session) {
           ctx <- getCtx(session)
           
           df$data %>%
-          select(.ci, .ri, .y) %>%
+          select(.ci, .ri, .y, variable) %>%
+          group_by(.ci, .ri) %>%  
           ctx$addNamespace() %>%
           ctx$save()
           progress$close()  
