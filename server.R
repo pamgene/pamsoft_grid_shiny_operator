@@ -506,14 +506,23 @@ shinyServer(function(input, output, session) {
       tryCatch({
           ctx <- getCtx(session)
           
-          inData <- ctx$select()
+          #inData <- ctx$select()
+          
+          idxX <- which(df$data$variable == "gridX")
+          idxY <- which(df$data$variable == "gridY")
+          idxC <- which(df$data$variable == "gridY" )
           
 
-          dfIdx <-  match(interaction(inData$.ri, inData$.ci),
-                          interaction(df$data$.ri, df$data$.ci))
-          inData$.y[ dfIdx   ] <- df$data$.y[dfIdx]
+          outDf <- data.frame(  
+            .ci=df$data$.ci[ idxC  ],
+            gridX=df$data$.y[ idxX  ],
+            gridY=df$data$.y[ idxY  ])
           
-          inData %>%
+          #dfIdx <-  match(interaction(inData$.ri, inData$.ci),
+          #                interaction(df$data$.ri, df$data$.ci))
+          #inData$.y[ dfIdx   ] <- df$data$.y[dfIdx]
+          
+          outDf %>%
           ctx$addNamespace() %>%
           ctx$save()
           progress$close()  
