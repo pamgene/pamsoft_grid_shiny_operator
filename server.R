@@ -29,6 +29,7 @@ getCtx <- function(session) {
 ############################################
 
 
+
 get_data <- function( session ){
   progress <- Progress$new(session, min=1, max=1)
   
@@ -169,9 +170,9 @@ shinyServer(function(input, output, session) {
       df$data <- get_data(session)
     }
     
-    if( !is.null(m) && m == "run"){
+    #if( !is.null(m) && m == "run"){
       shinyjs::enable("runBtn")
-    }
+    #}
     
 
     outfile <- tempfile(fileext = '.jpeg', tmpdir = imgDir)
@@ -516,7 +517,16 @@ shinyServer(function(input, output, session) {
       
   }) #END observeEvent : input$saveBtn
   
-
+  
+  onStop( function(){
+    print("Running clean up code")
+    imInfo <- isolate( imgInfo() )
+    imFolder <- imInfo[[1]][1]
+    zipFolder <- dirname(dirname(imFolder))
+    #print(zipFolder)
+    unlink( zipFolder, recursive=TRUE )
+    unlink( paste0(imgDir, "/*.jpeg"), force=TRUE) 
+  })
 })
 
 
