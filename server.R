@@ -272,15 +272,9 @@ shinyServer(function(input, output, session) {
   
   observe({
 
-    error(props)
-    if( !is.null(props() ))
-    {
-      spotPitch <- props()$grdSpotPitch
-      spotSize <- props()$grdSpotSize
-    }else{
-      spotPitch <- 40
-      spotSize <-  1
-    }
+    spotPitch <- as.numeric(props()$grdSpotPitch)
+    spotSize  <- as.numeric(props()$grdSpotSize)
+  
     
     off <- (spotPitch * spotSize)/2
     
