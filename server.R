@@ -268,12 +268,12 @@ shinyServer(function(input, output, session) {
   
   
   
-  props     <- reactive({get_operator_props(getCtx(session), imgInfo()[1])})
+  #props     <- reactive({get_operator_props(getCtx(session), imgInfo()[1])})
   
   observe({
     #TODO Pass those values as parameters to the operator
-    spotPitch <- props()$grdSpotPitch
-    spotSize <- props()$grdSpotSize
+    spotPitch <- 21.5 #props()$grdSpotPitch
+    spotSize <- 0.66 #props()$grdSpotSize
     off <- (spotPitch * spotSize)/2
     
     x <- grid$X()
