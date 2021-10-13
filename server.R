@@ -271,7 +271,8 @@ shinyServer(function(input, output, session) {
   props     <- reactive({get_operator_props(getCtx(session), imgInfo()[1])})
   
   observe({
-    #TODO Pass those values as parameters to the operator
+
+    error(props)
     if( !is.null(props() ))
     {
       spotPitch <- props()$grdSpotPitch
