@@ -9,8 +9,8 @@ library(stringr)
 library(tiff)
 
 # http://127.0.0.1:5402/admin/w/cff9a1469cd1de708b87bca99f003d42/ds/de38f46b-f300-4168-a8c0-b8cb898407cb
-#options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
-#options("tercen.stepId"= "de38f46b-f300-4168-a8c0-b8cb898407cb")
+options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
+options("tercen.stepId"= "de38f46b-f300-4168-a8c0-b8cb898407cb")
 
 
 ############################################
@@ -124,6 +124,64 @@ prep_image_folder <- function(session, docId){
 
 
 
+get_operator_props <- function(ctx, imagesFolder){
+  sqcMinDiameter <- -1
+  grdSpotPitch   <- -1
+  grdSpotSize   <- -1
+  
+  operatorProps <- ctx$query$operatorSettings$operatorRef$propertyValues
+  
+  for( prop in operatorProps ){
+    if (prop$name == "MinDiameter"){
+      sqcMinDiameter <- prop$value
+    }
+    
+    if (prop$name == "SpotPitch"){
+      grdSpotPitch <- prop$value
+    }
+    
+    if (prop$name == "SpotSize"){
+      grdSpotSize <- prop$value
+    }
+  }
+  
+  if( is.null(grdSpotPitch) || grdSpotPitch == -1 ){
+    grdSpotPitch <- 21.5
+  }
+  
+  if( is.null(grdSpotSize) || grdSpotSize == -1 ){
+    grdSpotSize <- 0.66
+  }
+  
+  if( is.null(sqcMinDiameter) || sqcMinDiameter == -1 ){
+    sqcMinDiameter <- 0.45
+  }
+  
+  props <- list()
+  
+  props$sqcMinDiameter <- sqcMinDiameter
+  props$grdSpotPitch <- grdSpotPitch
+  props$grdSpotSize <- grdSpotSize
+  
+  
+  # Get array layout
+  layoutDirParts <- str_split_fixed(imagesFolder, "/", Inf)
+  nParts  <- length(layoutDirParts) -1 # Layout is in parent folder
+  
+  layoutDir = ''
+  
+  for( i in 1:nParts){
+    layoutDir <- paste(layoutDir, layoutDirParts[i], sep = "/")
+  }
+  layoutDir <- paste(layoutDir, "*Layout*", sep = "/")
+  
+  props$arraylayoutfile <- Sys.glob(layoutDir)
+  
+  return (props)
+}
+
+
+
 # ================================================
 # SERVER FUNCTION
 # ================================================
@@ -209,9 +267,13 @@ shinyServer(function(input, output, session) {
   }, deleteFile = TRUE)
   
   
+  
+  props     <- reactive({get_operator_props(getCtx(session), imgInfo()[1])})
+  
   observe({
-    spotPitch <- 21.5
-    spotSize <- 0.66
+    #TODO Pass those values as parameters to the operator
+    spotPitch <- props()$grdSpotPitch
+    spotSize <- props()$grdSpotSize
     off <- (spotPitch * spotSize)/2
     
     x <- grid$X()

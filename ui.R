@@ -248,13 +248,10 @@ shinyUI(
                                         min = 0.2, max = 4,ticks=FALSE, 
                                         value = 1, step = 0.05))
                   ),
-        fluidRow(  column(2, 
-                          tags$div(title="Apply grid position changes to other images which used the same grid", 
-                                   actionButton("applyBtn", label = "Apply Grid"  ))  ),
+        fluidRow(  
                   column(2, 
                          tags$div(title="Save all grid position changes", 
-                                  disabled(actionButton("runBtn", label = "Run"  )))),
-                  column(4, verbatimTextOutput("opMode", placeholder=TRUE) )
+                                  disabled(actionButton("runBtn", label = "Run", width="120px"  ))))
                   ),
         fluidRow( column(8, imageOutput(outputId = "selectedImage")   ,  
                          style = "height:5px; visibility:hidden") ),
