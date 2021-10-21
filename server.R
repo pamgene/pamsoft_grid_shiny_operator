@@ -257,8 +257,10 @@ shinyServer(function(input, output, session) {
 
     #img[img > 1] = 1
     #img[img < 0] = 0
+    
+    img <- imager::imfill(  200, 200 )
 
-    #imager::save.image(img,outfile)
+    imager::save.image(img,outfile)
     
 
     list(src = outfile,
