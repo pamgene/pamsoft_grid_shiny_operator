@@ -99,8 +99,6 @@ prep_image_folder <- function(session, docId){
   
   on.exit(unlink(filename, recursive = TRUE, force = TRUE))
   
-  progress$set(message="Reading images")
-  
   image_list <- vector(mode="list", length=length(grep(".zip", doc$name)) )
   
   # unzip archive (which presumably exists at this point)
@@ -108,9 +106,7 @@ prep_image_folder <- function(session, docId){
   unzip(filename, exdir = tmpdir)
   
   imageResultsPath <- file.path(list.files(tmpdir, full.names = TRUE), "ImageResults")
-  
-  
-  progress$set(message="Listing files images")
+
   
   f.names <- list.files(imageResultsPath, full.names = TRUE)
   
@@ -119,10 +115,6 @@ prep_image_folder <- function(session, docId){
   
   fname <- str_split(fdir, '[.]', Inf)
   fext <- fname[[1]][2]
-  
-  progress$set(message="Done")
-  
-  Sys.sleep(1)
   
   progress$close()
   
@@ -244,29 +236,29 @@ shinyServer(function(input, output, session) {
 
     outfile <- tempfile(fileext = '.jpeg', tmpdir = imgDir)
     
-    selection$image <- imageList()[[1]][imageSelection$imageIdx]
-    selectedImage <- paste0( imgInfo()[1], '/', selection$image, '.', imgInfo()[2] )
+    #selection$image <- imageList()[[1]][imageSelection$imageIdx]
+    #selectedImage <- paste0( imgInfo()[1], '/', selection$image, '.', imgInfo()[2] )
     
-    dfImg <- reactive(df$data %>% filter(Image == selection$image ) )
+    #dfImg <- reactive(df$data %>% filter(Image == selection$image ) )
     
-    grid$Y <- reactive(dfImg() %>% filter(variable == "gridX") %>% pull(.y))
-    grid$X <- reactive(dfImg() %>% filter(variable == "gridY") %>% pull(.y))
+    #grid$Y <- reactive(dfImg() %>% filter(variable == "gridX") %>% pull(.y))
+    #grid$X <- reactive(dfImg() %>% filter(variable == "gridY") %>% pull(.y))
     
 
-    bf <- as.double(input$brightness)
-    ct <- as.double(input$contrast)
-    img <- drop(suppressWarnings( tiff::readTIFF(selectedImage) * 16 ))
-    # Change to width x height
-    img <- as.cimg(aperm(img, c(2,1)))
+    #bf <- as.double(input$brightness)
+    #ct <- as.double(input$contrast)
+    #img <- drop(suppressWarnings( tiff::readTIFF(selectedImage) * 16 ))
+    ## Change to width x height
+    #img <- as.cimg(aperm(img, c(2,1)))
     
-    img <- img / max(img)
+    #img <- img / max(img)
     
-    img <- ct * ((img + bf) - 0.5) + 0.5
+    #img <- ct * ((img + bf) - 0.5) + 0.5
 
-    img[img > 1] = 1
-    img[img < 0] = 0
+    #img[img > 1] = 1
+    #img[img < 0] = 0
 
-    imager::save.image(img,outfile)
+    #imager::save.image(img,outfile)
     
 
     list(src = outfile,
