@@ -5,9 +5,9 @@ library(shinycssloaders)
 
 
 js <- "
+
 $(document).on('shiny:value', function(evt) {
-  
-  
+
   if(evt.name === 'selectedImage') {
     setTimeout(function(){
       //var imgDiv = document.getElementById('selectedImage');
@@ -219,6 +219,18 @@ shinyUI(
               
 
                 </script>")),
+    tags$script(HTML(
+      "var currentRow = 0;
+      
+      Shiny.addCustomMessageHandler('select_row',function(rows) {
+      var table = $('#images').find('table').DataTable();
+      
+      table.rows().deselect();
+      table.row(rows-1).select();
+      
+      currentRow = rows-1;
+      })"
+      )),
     
     sidebarLayout(
       

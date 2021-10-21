@@ -37,7 +37,7 @@ shinyServer(function(input, output, session) {
   
   df        <- reactiveValues( data=NULL  )
   
-  
+
   gridImageList   <- reactive( get_image_used_list( session ) )
   imageChoiceList <- reactiveValues(data=NULL)
   imageSelection  <- reactiveValues( imageIdx=1, gridIdx=1 )
@@ -53,10 +53,8 @@ shinyServer(function(input, output, session) {
   docId   <- reactive( get_document_id( session )  )
   imgInfo <- reactive(prep_image_folder(session, docId)  )
   
-  selection <- reactiveValues(img=NULL)
-  
   imgDir <- tempdir(check=TRUE)
-  
+
   
   imageList <- reactive(get_image_list(df$data, gridImageList()[[imageSelection$gridIdx]] ))
   dtImageList <- reactive( imageChoiceList$data )
@@ -109,7 +107,6 @@ shinyServer(function(input, output, session) {
     
     imager::save.image(img,outfile)
     
-
     list(src = outfile,
          id = "gridImage",
          contentType = 'image/jpeg',
@@ -177,6 +174,7 @@ shinyServer(function(input, output, session) {
     
     imageChoiceList$data <- get_image_list(df$data, gridImageList()[ imageSelection$gridIdx])
     dtImageList <- reactive( imageChoiceList$data )
+    session$sendCustomMessage("select_row", imageSelection$imageIdx)
   }) # END OF nextGridBtn event
   
   
@@ -196,13 +194,16 @@ shinyServer(function(input, output, session) {
     
     imageChoiceList$data <- get_image_list(df$data, gridImageList()[ imageSelection$gridIdx ] )
     dtImageList <- reactive( imageChoiceList$data )
+    session$sendCustomMessage("select_row", imageSelection$imageIdx)
   }) # END OF prevGridBtn event
   
   
   observeEvent(input$nextImgBtn, {
 
     #grid$X <- newGridPos$X
+    
     imageSelection$imageIdx <- imageSelection$imageIdx+1
+    
     
     # From last image of a grid, jump to the first image of the subsequent grid
     if( imageSelection$imageIdx > length(imageList()[[1]]) && imageSelection$gridIdx < length( gridImageList())){
@@ -243,11 +244,13 @@ shinyServer(function(input, output, session) {
     }else{
       shinyjs::disable( "nextImgBtn"  )
     }
+    session$sendCustomMessage("select_row", imageSelection$imageIdx)
   } ) # END OF nextImgBtn event
   
   
   observeEvent(input$prevImgBtn, {
     imageSelection$imageIdx <- imageSelection$imageIdx-1
+    
     
     # From first image of a grid, jump to the last image of the previous grid
     if( imageSelection$imageIdx < 1 && imageSelection$gridIdx > 1 ){
@@ -281,7 +284,8 @@ shinyServer(function(input, output, session) {
       }
     } else{
       #shinyjs::disable( "applyBtn"  )
-    } 
+    }
+    session$sendCustomMessage("select_row", imageSelection$imageIdx)
   } ) # END OF prevImgBtn event
   
   # END of Image and Grid button events
@@ -359,6 +363,7 @@ shinyServer(function(input, output, session) {
     }else{
       shinyjs::enable( "prevGridBtn"  )
     }
+    session$sendCustomMessage("select_row", imageSelection$imageIdx)
   })
   
   
@@ -369,19 +374,25 @@ shinyServer(function(input, output, session) {
                 selected=1, selectize = TRUE, multiple = FALSE)
   })
   
-
+  
+  
   output$images <- renderDataTable( {
-      DT::datatable( data=dtImageList(), 
-                 selection=list(mode="single", selected=imageSelection$imageIdx),
+    suppressWarnings(
+      DT::datatable( data=dtImageList(),  
+                 selection='none',
                  colnames="", filter="none", style="bootstrap4", 
                  options = list(pageLength=15, pageLengthLsit=c(5,15,30), 
-                                processing=FALSE, searching=FALSE),
+                                processing=FALSE, searching=FALSE ),
+                 extensions=c("Select"),
                  callback=JS("table.on('click.dt', 'tr', function(e, dt, type, indexes) {
                               var row = $(this).children('td').html();
                               
                               Shiny.setInputValue('selectedImageRow', row);
-                          });")
-                 ) 
+                          }).on('init', function(e,dt,type,indexes){
+                             $('#images').find('table').DataTable().row(currentRow).select();  
+                             });")
+                 ) )
+    
     })
   
 
