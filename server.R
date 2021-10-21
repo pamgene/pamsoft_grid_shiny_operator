@@ -187,20 +187,21 @@ get_operator_props <- function(ctx, imagesFolder){
 # SERVER FUNCTION
 # ================================================
 shinyServer(function(input, output, session) {
-  gridImageList <- reactive( get_image_used_list(session) )
+  df        <- reactiveValues( data=get_data(session)  )
+  
+  gridImageList   <- reactive( get_image_used_list( df$data() ) )
   imageChoiceList <- reactiveValues(data=NULL)
-  imageSelection <- reactiveValues( imageIdx=1, gridIdx=1 )
+  imageSelection  <- reactiveValues( imageIdx=1, gridIdx=1 )
   
   newGridPos <- reactiveValues(X=NULL, Y=NULL)
 
   mode      <- reactive({getMode(session)})
   
-  grid      <- reactiveValues(X=NULL, Y=NULL)
-  df        <- reactiveValues( data=NULL  )
+  grid      <- reactiveValues( X=NULL, Y=NULL)
   selection <- reactiveValues( image=NULL  )
   
   
-  docId   <- reactive( get_document_id(session)  )
+  docId   <- reactive( get_document_id( df$data())  )
   imgInfo <- reactive(prep_image_folder(session, docId)  )
   
   selection <- reactiveValues(img=NULL)
@@ -208,8 +209,7 @@ shinyServer(function(input, output, session) {
   imgDir <- tempdir(check=TRUE)
   
   
-
-  imageList <- reactive(get_image_list(session, gridImageList()[[imageSelection$gridIdx]] ))
+  imageList <- reactive(get_image_list(df$data(), gridImageList()[[imageSelection$gridIdx]] ))
   dtImageList <- reactive( imageChoiceList$data )
   # END OF SERVER VARIABLES DEFINITION
   # +++++++++
@@ -222,17 +222,13 @@ shinyServer(function(input, output, session) {
   output$selectedImage <- renderImage({
     req(imgInfo)
     req(imageSelection$imageIdx)
+    req(df$data)
     
     m <- mode()
-    
-    if(is.null(df$data)){
-      df$data <- get_data(session)
-    }
     
     if( !is.null(m) && m == "run"){
       shinyjs::enable("runBtn")
     }
-    
 
     outfile <- tempfile(fileext = '.jpeg', tmpdir = imgDir)
     
@@ -272,23 +268,26 @@ shinyServer(function(input, output, session) {
   props     <- reactive({get_operator_props(getCtx(session), imgInfo()[1])})
   
   observe({
-    if( !is.null(grid$X()) && !is.null(props())  ){
-      spotPitch <- props()$grdSpotPitch
-      spotSize  <- props()$grdSpotSize
+    req(props)
+    req(grid$X)
+    req(grid$Y)
     
-      
-      off <- (spotPitch * spotSize)/2
-      
-      x <- grid$X()
-      y <- grid$Y()
-      r <- rep( off, length(x) )
-      
-      df <- data.frame(x=x, y=y, radius=r)
-      session$sendCustomMessage("imageDisplay", df)
-    }
+    spotPitch <- props()$grdSpotPitch
+    spotSize  <- props()$grdSpotSize
+  
+    
+    off <- (spotPitch * spotSize)/2
+    
+    x <- grid$X()
+    y <- grid$Y()
+    r <- rep( off, length(x) )
+    
+    df <- data.frame(x=x, y=y, radius=r)
+    session$sendCustomMessage("imageDisplay", df)
   })
   
   
+  #Receive updated grid positions from JS
   observeEvent(input$gridOverlay, {
     N <- length(input$gridOverlay)
     gridInput<-as.vector(input$gridOverlay)
@@ -323,7 +322,7 @@ shinyServer(function(input, output, session) {
                              selected=gridImageList()[imageSelection$gridIdx], 
                              choices=gridImageList() )
     
-    imageChoiceList$data <- get_image_list(session, gridImageList()[ imageSelection$gridIdx])
+    imageChoiceList$data <- get_image_list(df$data(), gridImageList()[ imageSelection$gridIdx])
     dtImageList <- reactive( imageChoiceList$data )
   }) # END OF nextGridBtn event
   
@@ -342,7 +341,7 @@ shinyServer(function(input, output, session) {
                              selected=gridImageList()[imageSelection$gridIdx], 
                              choices=gridImageList() )
     
-    imageChoiceList$data <- get_image_list(session, gridImageList()[ imageSelection$gridIdx])
+    imageChoiceList$data <- get_image_list(df$data(), gridImageList()[ imageSelection$gridIdx ] )
     dtImageList <- reactive( imageChoiceList$data )
   }) # END OF prevGridBtn event
   
@@ -368,7 +367,7 @@ shinyServer(function(input, output, session) {
                                selected=gridImageList()[imageSelection$gridIdx], 
                                choices=gridImageList() )
       
-      imageChoiceList$data <- get_image_list(session, gridImageList()[ imageSelection$gridIdx])
+      imageChoiceList$data <- get_image_list(df$data(), gridImageList()[ imageSelection$gridIdx])
       dtImageList <- reactive( imageChoiceList$data )
     }
     
@@ -380,10 +379,10 @@ shinyServer(function(input, output, session) {
     
     if( imageSelection$gridIdx > 1 ){
       shinyjs::enable( "prevGridBtn"  )
-      shinyjs::disable( "applyBtn"  )
-    }else{
-      shinyjs::enable( "applyBtn"  )
-    }
+      #shinyjs::disable( "applyBtn"  )
+    }#else{
+    #  shinyjs::enable( "applyBtn"  )
+    #}
     
 
     if(imageSelection$imageIdx < nrow(imageChoiceList$data) || imageSelection$gridIdx < length(gridImageList())){
@@ -415,10 +414,11 @@ shinyServer(function(input, output, session) {
                                selected=gridImageList()[imageSelection$gridIdx], 
                                choices=gridImageList() )
       
+      imageChoiceList$data <- get_image_list(df$data(), gridImageList()[ imageSelection$gridIdx])
       dtImageList <- reactive( imageChoiceList$data )
     }
     if(imageSelection$imageIdx == 1){
-      shinyjs::enable( "applyBtn"  )
+      #shinyjs::enable( "applyBtn"  )
       # Test if previous/next buttons need to be disabled
       if( imageSelection$gridIdx == 1){
         shinyjs::disable( "prevGridBtn"  )
@@ -427,7 +427,7 @@ shinyServer(function(input, output, session) {
         shinyjs::enable( "prevImgBtn"  )
       }
     } else{
-      shinyjs::disable( "applyBtn"  )
+      #shinyjs::disable( "applyBtn"  )
     } 
   } ) # END OF prevImgBtn event
   
@@ -443,10 +443,10 @@ shinyServer(function(input, output, session) {
       shinyjs::disable( "prevGridBtn"  )
       if(imageSelection$imageIdx == 1){
         shinyjs::disable( "prevImgBtn"  )
-        shinyjs::enable( "applyBtn"  )
+        #shinyjs::enable( "applyBtn"  )
       }else{
         shinyjs::enable( "prevImgBtn"  )
-        shinyjs::disable( "applyBtn"  )
+        #shinyjs::disable( "applyBtn"  )
       }
 
     }else{
@@ -465,7 +465,6 @@ shinyServer(function(input, output, session) {
       
     }else{
       shinyjs::enable( "nextGridBtn"  )
-      
     }
   })
   
@@ -483,14 +482,13 @@ shinyServer(function(input, output, session) {
     }
     
     
-    if(as.numeric(input$selectedImageRow) == 1){
-      shinyjs::enable( "applyBtn"  )
-    }else{
-      shinyjs::disable( "applyBtn"  ) 
-    }
+    #if(as.numeric(input$selectedImageRow) == 1){
+    #  shinyjs::enable( "applyBtn"  )
+    #}else{
+    #  shinyjs::disable( "applyBtn"  ) 
+    #}
     
     if( imageSelection$gridIdx == 1){
-      
       shinyjs::disable( "prevGridBtn"  )
       shinyjs::enable( "nextImgBtn"  )
       
@@ -555,7 +553,7 @@ shinyServer(function(input, output, session) {
       progress <- Progress$new(session, min=1, max=1)
       progress$set(message="Running ... please wait ...")
       
-      shinyjs::disable("applyBtn")
+      #shinyjs::disable("applyBtn")
       shinyjs::disable("runBtn")
       
       
@@ -602,40 +600,24 @@ remove_variable_ns <- function(varName){
 }
 
 
+get_image_list <- function(df, imageUsed){
+  values <- df %>% select(c("Image", "grdImageNameUsed")) %>%
+            filter(grdImageNameUsed == imageUsed) %>%
+            pull(Image) %>% unique() %>% as.data.frame()
 
-get_image_list <- function(session, imageUsed){
-  ctx <- getCtx(session)
-  
-  if(!is.null(imageUsed))
-  {
-    values <- ctx %>% cselect(ds0.Image, ds1.grdImageNameUsed) %>%
-    filter(ds1.grdImageNameUsed == imageUsed) %>%
-    pull(ds0.Image) %>% unique() %>% as.data.frame()
-  }else{
-    v0    <- ctx %>% cselect(ds1.grdImageNameUsed) %>% unique() %>% as.list()
-    values <- ctx %>% cselect(ds0.Image, ds1.grdImageNameUsed) %>%
-      filter(ds1.grdImageNameUsed == v0[[1]]) %>%
-      pull(ds0.Image) %>% unique() %>% as.data.frame()
-  }
-  
   return(values)
 }
 
 
-get_image_used_list <- function(session ){
-  ctx <- getCtx(session)
-  
-  values <- ctx %>% cselect(ds1.grdImageNameUsed) %>% unique() %>% as.list()
+get_image_used_list <- function( df ){
+  values <- df %>% pull("grdImageNameUsed") %>% unique() %>% as.list()
   
   return(values[[1]])
 }
 
 
-get_document_id <- function(session ){
-  ctx <- getCtx(session)
-  
-  
-  values <- ctx %>% cselect(documentId) %>% unique() %>% as.list()
+get_document_id <- function( df ){
+  values <- df %>% pull("documentId") %>% unique() %>% as.list()
   
   return(values[[1]][1])
 }
