@@ -8,9 +8,9 @@ library(DT)
 library(stringr)
 library(tiff)
 
-# http://127.0.0.1:5402/admin/w/cff9a1469cd1de708b87bca99f003d42/ds/de38f46b-f300-4168-a8c0-b8cb898407cb
-#options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
-#options("tercen.stepId"= "de38f46b-f300-4168-a8c0-b8cb898407cb")
+#http://127.0.0.1:5402/admin/w/378f18ac66a21562f6dc43c28401df71/ds/da68ad6d-2fbd-4a72-903c-68ce84607991
+#options("tercen.workflowId"= "378f18ac66a21562f6dc43c28401df71")
+#options("tercen.stepId"= "da68ad6d-2fbd-4a72-903c-68ce84607991")
 
 
 ############################################
