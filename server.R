@@ -134,15 +134,15 @@ get_operator_props <- function(ctx, imagesFolder){
   
   for( prop in operatorProps ){
     if (prop$name == "MinDiameter"){
-      sqcMinDiameter <- prop$value
+      sqcMinDiameter <- as.numeric(prop$value)
     }
     
     if (prop$name == "SpotPitch"){
-      grdSpotPitch <- prop$value
+      grdSpotPitch <- as.numeric(prop$value)
     }
     
     if (prop$name == "SpotSize"){
-      grdSpotSize <- prop$value
+      grdSpotSize <- as.numeric(prop$value)
     }
   }
   
@@ -236,30 +236,28 @@ shinyServer(function(input, output, session) {
 
     outfile <- tempfile(fileext = '.jpeg', tmpdir = imgDir)
     
-    #selection$image <- imageList()[[1]][imageSelection$imageIdx]
-    #selectedImage <- paste0( imgInfo()[1], '/', selection$image, '.', imgInfo()[2] )
+    selection$image <- imageList()[[1]][imageSelection$imageIdx]
+    selectedImage <- paste0( imgInfo()[1], '/', selection$image, '.', imgInfo()[2] )
     
-    #dfImg <- reactive(df$data %>% filter(Image == selection$image ) )
+    dfImg <- reactive(df$data %>% filter(Image == selection$image ) )
     
-    #grid$Y <- reactive(dfImg() %>% filter(variable == "gridX") %>% pull(.y))
-    #grid$X <- reactive(dfImg() %>% filter(variable == "gridY") %>% pull(.y))
+    grid$Y <- reactive(dfImg() %>% filter(variable == "gridX") %>% pull(.y))
+    grid$X <- reactive(dfImg() %>% filter(variable == "gridY") %>% pull(.y))
     
 
-    #bf <- as.double(input$brightness)
-    #ct <- as.double(input$contrast)
-    #img <- drop(suppressWarnings( tiff::readTIFF(selectedImage) * 16 ))
-    ## Change to width x height
-    #img <- as.cimg(aperm(img, c(2,1)))
+    bf <- as.double(input$brightness)
+    ct <- as.double(input$contrast)
+    img <- drop(suppressWarnings( tiff::readTIFF(selectedImage) * 16 ))
+    # Change to width x height
+    img <- as.cimg(aperm(img, c(2,1)))
     
-    #img <- img / max(img)
+    img <- img / max(img)
     
-    #img <- ct * ((img + bf) - 0.5) + 0.5
+    img <- ct * ((img + bf) - 0.5) + 0.5
 
-    #img[img > 1] = 1
-    #img[img < 0] = 0
+    img[img > 1] = 1
+    img[img < 0] = 0
     
-    img <- imager::imfill(  200, 200 )
-
     imager::save.image(img,outfile)
     
 
@@ -533,16 +531,7 @@ shinyServer(function(input, output, session) {
     })
   
 
-#  observeEvent( selection$img, {
-#    if(imageList()[[1]][selection$img] == input$imagedused && !is.null(mode()) && mode() == "run"){
-#      enable("runBtn")
-#    }else{
-#      disable("runBtn")
-#    }
-#
-#  } )
-  
-
+  # CURRENTLY UNUSED
   observeEvent( input$applyBtn, {
     isolate({
       data <- df$data
