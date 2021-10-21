@@ -99,6 +99,8 @@ prep_image_folder <- function(session, docId){
   
   on.exit(unlink(filename, recursive = TRUE, force = TRUE))
   
+  progress$set(message="Reading images")
+  
   image_list <- vector(mode="list", length=length(grep(".zip", doc$name)) )
   
   # unzip archive (which presumably exists at this point)
@@ -107,6 +109,9 @@ prep_image_folder <- function(session, docId){
   
   imageResultsPath <- file.path(list.files(tmpdir, full.names = TRUE), "ImageResults")
   
+  
+  progress$set(message="Listing files images")
+  
   f.names <- list.files(imageResultsPath, full.names = TRUE)
   
   fdir <- str_split_fixed(f.names[1], "/", Inf)
@@ -114,6 +119,10 @@ prep_image_folder <- function(session, docId){
   
   fname <- str_split(fdir, '[.]', Inf)
   fext <- fname[[1]][2]
+  
+  progress$set(message="Done")
+  
+  Sys.sleep(1)
   
   progress$close()
   
