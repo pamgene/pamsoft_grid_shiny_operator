@@ -30,158 +30,6 @@ getCtx <- function(session) {
 
 
 
-get_data <- function( session ){
-  ctx <- getCtx(session)
-  progress <- Progress$new(session, min=1, max=1)
-  progress$set(message="Loading Table Data")
-  
-  
-  required.cnames = c("documentId","grdImageNameUsed","Image","spotRow","spotCol","ID")
-  required.rnames = c("variable")
-  
-  cnames.with.ns = ctx$cnames
-  rnames.with.ns = ctx$rnames
-  
-  # here we keep the order of required.cnames
-  required.cnames.with.ns = lapply(required.cnames, function(required.cname){
-    Find(function(cname.with.ns){
-      endsWith(cname.with.ns, required.cname)
-    }, cnames.with.ns, nomatch=required.cname)
-  })
-  
-  required.rnames.with.ns = lapply(required.rnames, function(required.rname){
-    Find(function(rname.with.ns){
-      endsWith(rname.with.ns, required.rname)
-    }, rnames.with.ns, nomatch=required.rname)
-  })
-  
-  cTable <- ctx$cselect(required.cnames.with.ns)
-  rTable <- ctx$rselect(required.rnames.with.ns)
-  
-  
-  # override the names
-  names(cTable) = required.cnames
-  names(rTable) = required.rnames
-  
-
-  
-  qtTable <- ctx$select(c(".ci", ".ri", ".y"))
-  cTable[[".ci"]] = seq(0, nrow(cTable)-1)
-  
-  qtTable = dplyr::left_join(qtTable,cTable,by=".ci")
-  
-  rTable[[".ri"]] = seq(0, nrow(rTable)-1)
-  
-  qtTable = dplyr::left_join(qtTable,rTable,by=".ri")
-  qtTable$variable = sapply(qtTable$variable, remove_variable_ns)
-  
-  progress$close()
-  
-  return(qtTable)
-  
-}
-
-prep_image_folder <- function(session, docId){
-  docId <- docId()
-  progress <- Progress$new(session, min=1, max=1)
-  
-  
-  progress$set(message="Downloading images")
-  
-  ctx <- getCtx(session)
-  
-  
-  #1. extract files
-  doc   <- ctx$client$fileService$get(docId )
-  filename <- tempfile()
-  writeBin(ctx$client$fileService$download(docId), filename)
-  
-  on.exit(unlink(filename, recursive = TRUE, force = TRUE))
-  
-  image_list <- vector(mode="list", length=length(grep(".zip", doc$name)) )
-  
-  # unzip archive (which presumably exists at this point)
-  tmpdir <- tempfile()
-  unzip(filename, exdir = tmpdir)
-  
-  imageResultsPath <- file.path(list.files(tmpdir, full.names = TRUE), "ImageResults")
-
-  
-  f.names <- list.files(imageResultsPath, full.names = TRUE)
-  
-  fdir <- str_split_fixed(f.names[1], "/", Inf)
-  fdir <- fdir[length(fdir)]
-  
-  fname <- str_split(fdir, '[.]', Inf)
-  fext <- fname[[1]][2]
-  
-  progress$close()
-  
-  # Images for all series will be here
-  return(list(imageResultsPath, fext))
-  
-}
-
-
-
-get_operator_props <- function(ctx, imagesFolder){
-  sqcMinDiameter <- -1
-  grdSpotPitch   <- -1
-  grdSpotSize   <- -1
-  
-  operatorProps <- ctx$query$operatorSettings$operatorRef$propertyValues
-  
-  for( prop in operatorProps ){
-    if (prop$name == "MinDiameter"){
-      sqcMinDiameter <- as.numeric(prop$value)
-    }
-    
-    if (prop$name == "SpotPitch"){
-      grdSpotPitch <- as.numeric(prop$value)
-    }
-    
-    if (prop$name == "SpotSize"){
-      grdSpotSize <- as.numeric(prop$value)
-    }
-  }
-  
-  if( is.null(grdSpotPitch) || grdSpotPitch == -1 ){
-    grdSpotPitch <- 21.5
-  }
-  
-  if( is.null(grdSpotSize) || grdSpotSize == -1 ){
-    grdSpotSize <- 0.66
-  }
-  
-  if( is.null(sqcMinDiameter) || sqcMinDiameter == -1 ){
-    sqcMinDiameter <- 0.45
-  }
-  
-  props <- list()
-  
-  props$sqcMinDiameter <- sqcMinDiameter
-  props$grdSpotPitch <- grdSpotPitch
-  props$grdSpotSize <- grdSpotSize
-  
-  
-  # Get array layout
-  layoutDirParts <- str_split_fixed(imagesFolder, "/", Inf)
-  nParts  <- length(layoutDirParts) -1 # Layout is in parent folder
-  
-  layoutDir = ''
-  
-  for( i in 1:nParts){
-    layoutDir <- paste(layoutDir, layoutDirParts[i], sep = "/")
-  }
-  layoutDir <- paste(layoutDir, "*Layout*", sep = "/")
-  
-  props$arraylayoutfile <- Sys.glob(layoutDir)
-  
-  return (props)
-}
-
-
-
 # ================================================
 # SERVER FUNCTION
 # ================================================
@@ -639,3 +487,156 @@ getMode = function(session){
   query = parseQueryString(session$clientData$url_search)
   return(query[["mode"]])
 }
+
+
+get_data <- function( session ){
+  ctx <- getCtx(session)
+  progress <- Progress$new(session, min=1, max=1)
+  progress$set(message="Loading Table Data")
+  
+  
+  required.cnames = c("documentId","grdImageNameUsed","Image","spotRow","spotCol","ID")
+  required.rnames = c("variable")
+  
+  cnames.with.ns = ctx$cnames
+  rnames.with.ns = ctx$rnames
+  
+  # here we keep the order of required.cnames
+  required.cnames.with.ns = lapply(required.cnames, function(required.cname){
+    Find(function(cname.with.ns){
+      endsWith(cname.with.ns, required.cname)
+    }, cnames.with.ns, nomatch=required.cname)
+  })
+  
+  required.rnames.with.ns = lapply(required.rnames, function(required.rname){
+    Find(function(rname.with.ns){
+      endsWith(rname.with.ns, required.rname)
+    }, rnames.with.ns, nomatch=required.rname)
+  })
+  
+  cTable <- ctx$cselect(required.cnames.with.ns)
+  rTable <- ctx$rselect(required.rnames.with.ns)
+  
+  
+  # override the names
+  names(cTable) = required.cnames
+  names(rTable) = required.rnames
+  
+  
+  
+  qtTable <- ctx$select(c(".ci", ".ri", ".y"))
+  cTable[[".ci"]] = seq(0, nrow(cTable)-1)
+  
+  qtTable = dplyr::left_join(qtTable,cTable,by=".ci")
+  
+  rTable[[".ri"]] = seq(0, nrow(rTable)-1)
+  
+  qtTable = dplyr::left_join(qtTable,rTable,by=".ri")
+  qtTable$variable = sapply(qtTable$variable, remove_variable_ns)
+  
+  progress$close()
+  
+  return(qtTable)
+  
+}
+
+prep_image_folder <- function(session, docId){
+  docId <- docId()
+  progress <- Progress$new(session, min=1, max=1)
+  
+  
+  progress$set(message="Downloading images")
+  
+  ctx <- getCtx(session)
+  
+  
+  #1. extract files
+  doc   <- ctx$client$fileService$get(docId )
+  filename <- tempfile()
+  writeBin(ctx$client$fileService$download(docId), filename)
+  
+  on.exit(unlink(filename, recursive = TRUE, force = TRUE))
+  
+  image_list <- vector(mode="list", length=length(grep(".zip", doc$name)) )
+  
+  # unzip archive (which presumably exists at this point)
+  tmpdir <- tempfile()
+  unzip(filename, exdir = tmpdir)
+  
+  imageResultsPath <- file.path(list.files(tmpdir, full.names = TRUE), "ImageResults")
+  
+  
+  f.names <- list.files(imageResultsPath, full.names = TRUE)
+  
+  fdir <- str_split_fixed(f.names[1], "/", Inf)
+  fdir <- fdir[length(fdir)]
+  
+  fname <- str_split(fdir, '[.]', Inf)
+  fext <- fname[[1]][2]
+  
+  progress$close()
+  
+  # Images for all series will be here
+  return(list(imageResultsPath, fext))
+  
+}
+
+
+
+get_operator_props <- function(ctx, imagesFolder){
+  sqcMinDiameter <- -1
+  grdSpotPitch   <- -1
+  grdSpotSize   <- -1
+  
+  operatorProps <- ctx$query$operatorSettings$operatorRef$propertyValues
+  
+  for( prop in operatorProps ){
+    if (prop$name == "MinDiameter"){
+      sqcMinDiameter <- as.numeric(prop$value)
+    }
+    
+    if (prop$name == "SpotPitch"){
+      grdSpotPitch <- as.numeric(prop$value)
+    }
+    
+    if (prop$name == "SpotSize"){
+      grdSpotSize <- as.numeric(prop$value)
+    }
+  }
+  
+  if( is.null(grdSpotPitch) || grdSpotPitch == -1 ){
+    grdSpotPitch <- 21.5
+  }
+  
+  if( is.null(grdSpotSize) || grdSpotSize == -1 ){
+    grdSpotSize <- 0.66
+  }
+  
+  if( is.null(sqcMinDiameter) || sqcMinDiameter == -1 ){
+    sqcMinDiameter <- 0.45
+  }
+  
+  props <- list()
+  
+  props$sqcMinDiameter <- sqcMinDiameter
+  props$grdSpotPitch <- grdSpotPitch
+  props$grdSpotSize <- grdSpotSize
+  
+  
+  # Get array layout
+  layoutDirParts <- str_split_fixed(imagesFolder, "/", Inf)
+  nParts  <- length(layoutDirParts) -1 # Layout is in parent folder
+  
+  layoutDir = ''
+  
+  for( i in 1:nParts){
+    layoutDir <- paste(layoutDir, layoutDirParts[i], sep = "/")
+  }
+  layoutDir <- paste(layoutDir, "*Layout*", sep = "/")
+  
+  props$arraylayoutfile <- Sys.glob(layoutDir)
+  
+  return (props)
+}
+
+
