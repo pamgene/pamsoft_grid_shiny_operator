@@ -38,7 +38,7 @@ shinyServer(function(input, output, session) {
   df        <- reactiveValues( data=NULL  )
   
   
-  gridImageList   <- reactive( get_image_used_list( df$data ) )
+  gridImageList   <- reactive( get_image_used_list( session ) )
   imageChoiceList <- reactiveValues(data=NULL)
   imageSelection  <- reactiveValues( imageIdx=1, gridIdx=1 )
   
@@ -50,7 +50,7 @@ shinyServer(function(input, output, session) {
   selection <- reactiveValues( image=NULL  )
   
   
-  docId   <- reactive( get_document_id( df$data )  )
+  docId   <- reactive( get_document_id( session )  )
   imgInfo <- reactive(prep_image_folder(session, docId)  )
   
   selection <- reactiveValues(img=NULL)
@@ -75,6 +75,7 @@ shinyServer(function(input, output, session) {
     if(is.null(df$data)){
       df$data <- get_data(session)
     }
+    
     
     m <- mode()
     
@@ -127,7 +128,7 @@ shinyServer(function(input, output, session) {
     spotPitch <- props()$grdSpotPitch
     spotSize  <- props()$grdSpotSize
   
-    
+      
     off <- (spotPitch * spotSize)/2
     
     x <- grid$X()
@@ -287,7 +288,8 @@ shinyServer(function(input, output, session) {
   #+++++++++++++++++++++++++++++++++++++++++++++++++
   
   observeEvent(input$imagedused,{ 
-    imageSelection$gridIdx <- which(gridImageList()== input$imagedused) 
+    imageSelection$gridIdx <- which(gridImageList() == input$imagedused) 
+
     
     imageChoiceList$data <- get_image_list(df$data, gridImageList()[ imageSelection$gridIdx] )
     
@@ -318,6 +320,9 @@ shinyServer(function(input, output, session) {
     }else{
       shinyjs::enable( "nextGridBtn"  )
     }
+    
+    
+    
   })
   
   observeEvent( input$selectedImageRow, {
@@ -354,29 +359,23 @@ shinyServer(function(input, output, session) {
     }else{
       shinyjs::enable( "prevGridBtn"  )
     }
-    
-    
-    
-  } )
+  })
   
   
   output$imageusedpanel<-renderUI({
-    req(df$data)
     req(gridImageList)
     
-
     selectInput("imagedused", "Grid Image", choices=gridImageList(), 
-                selected=1, selectize = FALSE, multiple = FALSE)
+                selected=1, selectize = TRUE, multiple = FALSE)
   })
   
 
   output$images <- renderDataTable( {
-      
       DT::datatable( data=dtImageList(), 
                  selection=list(mode="single", selected=imageSelection$imageIdx),
                  colnames="", filter="none", style="bootstrap4", 
                  options = list(pageLength=15, pageLengthLsit=c(5,15,30), 
-                                "processing"=FALSE, "searching"=FALSE),
+                                processing=FALSE, searching=FALSE),
                  callback=JS("table.on('click.dt', 'tr', function(e, dt, type, indexes) {
                               var row = $(this).children('td').html();
                               
@@ -460,12 +459,7 @@ remove_variable_ns <- function(varName){
 get_image_list <- function(df, imageUsed){
   req(df)
   
-  print("++++++++++++++++++++++++++++++")
-  print("Getting image list")
-  print(deparse(sys.calls()[[sys.nframe()-1]]))
-  print("++++++++++++++++++++++++++++++")
-  
-  
+
   values <- df %>% select(c("Image", "grdImageNameUsed")) %>%
             filter(grdImageNameUsed == imageUsed) %>%
             pull(Image) %>% unique() %>% as.data.frame()
@@ -474,17 +468,29 @@ get_image_list <- function(df, imageUsed){
 }
 
 
-get_image_used_list <- function( df ){
-  req(df)
-  values <- df %>% pull("grdImageNameUsed") %>% unique() %>% as.list()
+get_image_used_list <- function( session ){
+  ctx <- getCtx(session)
   
+  required.cnames = c("grdImageNameUsed")
+  cnames.with.ns = ctx$cnames
+  required.cnames.with.ns = lapply(required.cnames, function(required.cname){
+    Find(function(cname.with.ns){
+      endsWith(cname.with.ns, required.cname)
+    }, cnames.with.ns, nomatch=required.cname)
+  })
+
+  
+  values <- ctx$cselect(required.cnames.with.ns) %>% unique() %>% as.list()
+
+
   return(values[[1]])
 }
 
 
-get_document_id <- function( df ){
+get_document_id <- function( session ){
   
-  values <- df %>% pull("documentId") %>% unique() %>% as.list()
+  ctx <- getCtx(session)
+  values <- ctx %>% cselect("documentId") %>% unique() %>% as.list()
   
   return(values[[1]][1])
 }
