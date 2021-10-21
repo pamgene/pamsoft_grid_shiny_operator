@@ -374,8 +374,9 @@ shinyServer(function(input, output, session) {
       
       DT::datatable( data=dtImageList(), 
                  selection=list(mode="single", selected=imageSelection$imageIdx),
-                 colnames="", filter="none", style="bootstrap4",
-                 options = list(pageLength=15, pageLengthLsit=c(5,15,30)),
+                 colnames="", filter="none", style="bootstrap4", 
+                 options = list(pageLength=15, pageLengthLsit=c(5,15,30), 
+                                "processing"=FALSE, "searching"=FALSE),
                  callback=JS("table.on('click.dt', 'tr', function(e, dt, type, indexes) {
                               var row = $(this).children('td').html();
                               
@@ -458,6 +459,12 @@ remove_variable_ns <- function(varName){
 
 get_image_list <- function(df, imageUsed){
   req(df)
+  
+  print("++++++++++++++++++++++++++++++")
+  print("Getting image list")
+  print(deparse(sys.calls()[[sys.nframe()-1]]))
+  print("++++++++++++++++++++++++++++++")
+  
   
   values <- df %>% select(c("Image", "grdImageNameUsed")) %>%
             filter(grdImageNameUsed == imageUsed) %>%
