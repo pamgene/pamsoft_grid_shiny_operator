@@ -273,9 +273,9 @@ shinyServer(function(input, output, session) {
   
   observe({
 
-    if( !is.null(grid$X())){
-      spotPitch <- as.numeric(props()$grdSpotPitch)
-      spotSize  <- as.numeric(props()$grdSpotSize)
+    if( !is.null(grid$X()) && !is.null(props())  ){
+      spotPitch <- props()$grdSpotPitch
+      spotSize  <- props()$grdSpotSize
     
       
       off <- (spotPitch * spotSize)/2
