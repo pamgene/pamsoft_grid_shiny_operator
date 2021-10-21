@@ -271,24 +271,22 @@ shinyServer(function(input, output, session) {
   
   props     <- reactive({get_operator_props(getCtx(session), imgInfo()[1])})
   
-#  observe({
-#
-#    if( !is.null(grid$X()) && !is.null(props())  ){
-#      spotPitch <- props()$grdSpotPitch
-#      spotSize  <- props()$grdSpotSize
-#    
-#      
-#      off <- (spotPitch * spotSize)/2
-#      
-#      x <- grid$X()
-#      y <- grid$Y()
-#      r <- rep( off, length(x) )
-#      
-#      df <- data.frame(x=x, y=y, radius=r)
-#      session$sendCustomMessage("imageDisplay", df)
-#    }
-#
-#  })
+  observe({
+    if( !is.null(grid$X()) && !is.null(props())  ){
+      spotPitch <- props()$grdSpotPitch
+      spotSize  <- props()$grdSpotSize
+    
+      
+      off <- (spotPitch * spotSize)/2
+      
+      x <- grid$X()
+      y <- grid$Y()
+      r <- rep( off, length(x) )
+      
+      df <- data.frame(x=x, y=y, radius=r)
+      session$sendCustomMessage("imageDisplay", df)
+    }
+  })
   
   
   observeEvent(input$gridOverlay, {
