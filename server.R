@@ -9,8 +9,8 @@ library(stringr)
 library(tiff)
 
 #http://127.0.0.1:5402/admin/w/378f18ac66a21562f6dc43c28401df71/ds/da68ad6d-2fbd-4a72-903c-68ce84607991
-#options("tercen.workflowId"= "378f18ac66a21562f6dc43c28401df71")
-#options("tercen.stepId"= "da68ad6d-2fbd-4a72-903c-68ce84607991")
+options("tercen.workflowId"= "378f18ac66a21562f6dc43c28401df71")
+options("tercen.stepId"= "da68ad6d-2fbd-4a72-903c-68ce84607991")
 
 
 ############################################
@@ -40,7 +40,7 @@ shinyServer(function(input, output, session) {
 
   gridImageList   <- reactive( get_image_used_list( session ) )
   imageChoiceList <- reactiveValues(data=NULL)
-  imageSelection  <- reactiveValues( imageIdx=1, gridIdx=1 )
+  imageSelection  <- reactiveValues( imageIdx=-1, gridIdx=1 )
   
   newGridPos <- reactiveValues(X=NULL, Y=NULL)
 
@@ -58,6 +58,8 @@ shinyServer(function(input, output, session) {
   
   imageList <- reactive(get_image_list(df$data, gridImageList()[[imageSelection$gridIdx]] ))
   dtImageList <- reactive( imageChoiceList$data )
+  
+  
   # END OF SERVER VARIABLES DEFINITION
   # +++++++++
   
@@ -82,6 +84,11 @@ shinyServer(function(input, output, session) {
     }
 
     outfile <- tempfile(fileext = '.jpeg', tmpdir = imgDir)
+    
+    if(imageSelection$imageIdx == -1){
+      
+      imageSelection$imageIdx <- nrow(imageList())
+    }
     
     selection$image <- imageList()[[1]][imageSelection$imageIdx]
     selectedImage <- paste0( imgInfo()[1], '/', selection$image, '.', imgInfo()[2] )
@@ -174,18 +181,20 @@ shinyServer(function(input, output, session) {
     
     imageChoiceList$data <- get_image_list(df$data, gridImageList()[ imageSelection$gridIdx])
     dtImageList <- reactive( imageChoiceList$data )
+    imageSelection$imageIdx <- nrow(dtImageList())
     session$sendCustomMessage("select_row", imageSelection$imageIdx)
+    session$sendCustomMessage("button_evt", 0)
   }) # END OF nextGridBtn event
   
   
   observeEvent(input$prevGridBtn, {
     imageSelection$gridIdx <- imageSelection$gridIdx - 1
     
-    if(imageSelection$gridIdx == 1 ){
-      shinyjs::disable( "prevGridBtn"  )
-    }else{
-      shinyjs::enable( "prevGridBtn"  )
-    }
+    #if(imageSelection$gridIdx == 1 ){
+    #  shinyjs::disable( "prevGridBtn"  )
+    #}else{
+    #  shinyjs::enable( "prevGridBtn"  )
+    #}
     
     shiny::updateSelectInput(session = session, 
                              inputId = "imagedused", 
@@ -194,7 +203,9 @@ shinyServer(function(input, output, session) {
     
     imageChoiceList$data <- get_image_list(df$data, gridImageList()[ imageSelection$gridIdx ] )
     dtImageList <- reactive( imageChoiceList$data )
+    imageSelection$imageIdx <- nrow(dtImageList())
     session$sendCustomMessage("select_row", imageSelection$imageIdx)
+    session$sendCustomMessage("button_evt", 0)
   }) # END OF prevGridBtn event
   
   
@@ -244,7 +255,10 @@ shinyServer(function(input, output, session) {
     }else{
       shinyjs::disable( "nextImgBtn"  )
     }
+    
     session$sendCustomMessage("select_row", imageSelection$imageIdx)
+    session$sendCustomMessage("button_evt", 1)
+    
   } ) # END OF nextImgBtn event
   
   
@@ -286,6 +300,7 @@ shinyServer(function(input, output, session) {
       #shinyjs::disable( "applyBtn"  )
     }
     session$sendCustomMessage("select_row", imageSelection$imageIdx)
+    session$sendCustomMessage("button_evt", 1)
   } ) # END OF prevImgBtn event
   
   # END of Image and Grid button events
@@ -389,7 +404,13 @@ shinyServer(function(input, output, session) {
                               
                               Shiny.setInputValue('selectedImageRow', row);
                           }).on('init', function(e,dt,type,indexes){
-                             $('#images').find('table').DataTable().row(currentRow).select();  
+                             
+                             if(isButton == 0){
+                              var last = $('#images').find('table').DataTable().rows().count()-1
+                              $('#images').find('table').DataTable().row(last).select();  
+                             }else{
+                              $('#images').find('table').DataTable().row(currentRow).select();  
+                             }
                              });")
                  ) )
     
@@ -415,6 +436,111 @@ shinyServer(function(input, output, session) {
     
   } )
   
+  observeEvent( input$gridBtn, {
+    
+    spotPitch <- props()$grdSpotPitch
+    spotSize  <- props()$grdSpotSize
+    
+    selection$image <- imageList()[[1]][imageSelection$imageIdx]
+    #selectedImage <- paste0( imgInfo()[1], '/', selection$image, '.', imgInfo()[2] )
+    
+    dfImg <- df$data %>% filter(Image == selection$image ) 
+    
+    spotRow <- dfImg %>% filter(.ri == 0) %>% pull(spotRow)
+    spotCol <- dfImg %>% filter(.ri == 0) %>% pull(spotCol)
+    
+    spotsX <- list()
+    spotsY <- list()
+    
+    tetrisSpotCenter.x <- 0
+    tetrisSpotCenter.y <- 0
+    stdSpotCenter.x    <- 0
+    stdSpotCenter.y    <- 0
+    
+    nTetris <- 0
+    nStd    <- 0
+    
+    for(i in seq_along(spotRow)){
+      spot.x <- abs(spotRow[i]) * spotPitch
+      spot.y <- abs(spotCol[i]) * spotPitch
+
+      spotsX <- append(spotsX, spot.x)
+      spotsY <- append(spotsY, spot.y)
+      
+      if( spotRow[i] < 0 ){
+        tetrisSpotCenter.x <- tetrisSpotCenter.x + spot.x
+        tetrisSpotCenter.y <- tetrisSpotCenter.y + spot.y
+        nTetris <- nTetris + 1 
+      }else{
+        stdSpotCenter.x <- stdSpotCenter.x + spot.x
+        stdSpotCenter.y <- stdSpotCenter.y + spot.y
+        nStd <- nStd + 1
+      }
+    }
+    
+
+    tetrisSpotCenter.x <- tetrisSpotCenter.x / nTetris
+    tetrisSpotCenter.y <- tetrisSpotCenter.y / nTetris
+    
+    stdSpotCenter.x <- stdSpotCenter.x / nStd
+    stdSpotCenter.y <- stdSpotCenter.y / nStd
+    
+    diffCenter.x <- tetrisSpotCenter.x - stdSpotCenter.x 
+    diffCenter.y <- tetrisSpotCenter.y - stdSpotCenter.y
+
+    
+    for(i in seq_along(spotRow)){
+      if( spotRow[i] < 0 ){
+        spot.x <- spotsX[[i]]
+        spot.y <- spotsY[[i]]
+        
+        spot.x <- spot.x + diffCenter.x
+        spot.y <- spot.y + diffCenter.y
+        
+        
+        spotsX[i] <- spot.x
+        spotsY[i] <- spot.y
+        
+      }
+    }
+    
+    #grid$Y <- reactive( unlist(spotsX) )
+    #grid$X <- reactive( unlist(spotsY) )
+    
+    spotPitch <- props()$grdSpotPitch
+    spotSize  <- props()$grdSpotSize
+    
+    
+    off <- (spotPitch * spotSize)/2
+    
+    x <- unlist(spotsX) #grid$X()
+    y <- unlist(spotsY) #grid$Y()
+    r <- rep( off, length(x) )
+    
+
+    
+    #dfImg <- reactive(df$data %>% filter(Image == selection$image ) )
+    
+    newGrid <- data.frame(x=x, y=y, radius=r)
+    session$sendCustomMessage("imageDisplay", newGrid)
+    
+    
+    # Update the image used for gridding
+    df$data$grdImageNameUsed[df$data$Image == selection$image  ] = selection$image
+    #df$data$grdImageNameUsed[df$data$Image == selection$image  ] = selection$image
+    session$reload()
+    print(df$data)
+    #df$data$.y[df$data$variable == selection$image  ] = selection$image
+    
+    #print(mutate(df, where( df$data$Image == selection$image, image )  ))
+    
+    #print(df$data$grdImageNameUsed)
+    
+    #grid$Y <- reactive(dfImg() %>% filter(variable == "gridX") %>% pull(.y))
+    #grid$X <- reactive(dfImg() %>% filter(variable == "gridY") %>% pull(.y))
+    
+    print("DONE")
+  } )
   
   observeEvent( input$runBtn, {
       progress <- Progress$new(session, min=1, max=1)
@@ -591,6 +717,11 @@ prep_image_folder <- function(session, docId){
   
   
   f.names <- list.files(imageResultsPath, full.names = TRUE)
+
+  for( img in f.names){
+    on.exit(unlink(img))
+  }
+  
   
   fdir <- str_split_fixed(f.names[1], "/", Inf)
   fdir <- fdir[length(fdir)]

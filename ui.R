@@ -45,6 +45,7 @@ shinyUI(
     shinyjs::useShinyjs(),
     tags$script(HTML(js)),
     tags$head(HTML("<script type='text/javascript'>
+                  
                   var customMessageHandler = function(list){
                   var Arc = function(x, y, radius, radians) {
                       this.x = x;
@@ -221,6 +222,7 @@ shinyUI(
                 </script>")),
     tags$script(HTML(
       "var currentRow = 0;
+       var isButton = 0;
       
       Shiny.addCustomMessageHandler('select_row',function(rows) {
       var table = $('#images').find('table').DataTable();
@@ -229,6 +231,10 @@ shinyUI(
       table.row(rows-1).select();
       
       currentRow = rows-1;
+      });
+      
+      Shiny.addCustomMessageHandler('button_evt',function(isBtn) {
+        isButton = isBtn;
       })"
       )),
     
@@ -238,7 +244,7 @@ shinyUI(
                    fluidRow( column(12, uiOutput("imageusedpanel")),
                              column(12, uiOutput("imagepanel"))   ),
                    fluidRow(column(2, disabled(actionButton("prevGridBtn", label = "<< Grid"  )) ),
-                            column(2, disabled(actionButton("prevImgBtn", label = "< Image"  )) ) ,
+                            column(2, actionButton("prevImgBtn", label = "< Image"  ) ) ,
                             column(2, actionButton("nextImgBtn", label = "Image >"  ) )  ,
                             column(2, actionButton("nextGridBtn", label = "Grid >>"  ) )
                             ),
@@ -263,7 +269,10 @@ shinyUI(
         fluidRow(  
                   column(2, 
                          tags$div(title="Save all grid position changes", 
-                                  disabled(actionButton("runBtn", label = "Run", width="120px"  ))))
+                                  disabled(actionButton("runBtn", label = "Run", width="120px"  )))),
+                  column(2, 
+                         tags$div(title="Create a new grid for the current image", 
+                                  actionButton("gridBtn", label = "New Grid", width="120px"  )))
                   ),
         fluidRow( column(8, imageOutput(outputId = "selectedImage")   ,  
                          style = "height:5px; visibility:hidden") ),
