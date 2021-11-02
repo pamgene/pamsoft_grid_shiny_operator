@@ -155,13 +155,10 @@ shinyServer(function(input, output, session) {
     data <- df$data
 
     # Changes to the images used for gridding are applied to all relevant images
-    if(selection$image == gridSpotList$gridList[[gridSpotList$selectedGrid]]){
-      data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridX"] = Y
-      data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridY"] = X
-    }else{
-      data$.y[data$variable == "gridX" & data$Image == selection$image] <- Y
-      data$.y[data$variable == "gridY" & data$Image == selection$image] <- X
-    }
+
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridX"] = Y
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = X
+
 
     df$data <- data
   })
