@@ -3,6 +3,7 @@ library(DT)
 library(shinyjs)
 library(shinycssloaders)
 
+library(shinybusy)
 
 js <- "
 
@@ -43,6 +44,7 @@ shinyUI(
   
   fluidPage(
     shinyjs::useShinyjs(),
+    
     tags$script(HTML(js)),
     tags$head(HTML("<script type='text/javascript'>
                   
@@ -224,6 +226,11 @@ shinyUI(
       "var currentRow = 0;
        var isButton = 0;
       
+      Shiny.addCustomMessageHandler('init_grid_images',function(unused) {
+        Shiny.setInputValue('selectedImageRow', 1);
+      });
+      
+
       Shiny.addCustomMessageHandler('select_row',function(rows) {
       var table = $('#images').find('table').DataTable();
       
@@ -244,7 +251,7 @@ shinyUI(
                    fluidRow( column(12, uiOutput("imageusedpanel")),
                              column(12, uiOutput("imagepanel"))   ),
                    fluidRow(column(2, disabled(actionButton("prevGridBtn", label = "<< Grid"  )) ),
-                            column(2, actionButton("prevImgBtn", label = "< Image"  ) ) ,
+                            column(2, disabled(actionButton("prevImgBtn", label = "< Image"  )) ) ,
                             column(2, actionButton("nextImgBtn", label = "Image >"  ) )  ,
                             column(2, actionButton("nextGridBtn", label = "Grid >>"  ) )
                             ),
