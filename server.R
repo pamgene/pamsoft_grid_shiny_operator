@@ -12,8 +12,8 @@ library(stringr)
 library(tiff)
 
 #http://127.0.0.1:5402/admin/w/378f18ac66a21562f6dc43c28401df71/ds/da68ad6d-2fbd-4a72-903c-68ce84607991
-options("tercen.workflowId"= "378f18ac66a21562f6dc43c28401df71")
-options("tercen.stepId"= "da68ad6d-2fbd-4a72-903c-68ce84607991")
+#options("tercen.workflowId"= "378f18ac66a21562f6dc43c28401df71")
+#options("tercen.stepId"= "da68ad6d-2fbd-4a72-903c-68ce84607991")
 
 
 ############################################
