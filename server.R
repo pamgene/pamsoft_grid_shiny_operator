@@ -569,6 +569,7 @@ shinyServer(function(input, output, session) {
       progress$set(message="Running ... please wait ...")
 
       shinyjs::disable("runBtn")
+      shinyjs::disable("gridBtn")
 
 
       tryCatch({
@@ -584,7 +585,9 @@ shinyServer(function(input, output, session) {
           outDf <- data.frame(
             .ci=df$data$.ci[ idxC  ],
             gridX=df$data$.y[ idxX  ],
-            gridY=df$data$.y[ idxY  ])
+            gridY=df$data$.y[ idxY  ],
+            grdImageNameUsed=unique(gridSpotList$gridList  ), 
+            Image=unique(gridSpotList$imageList  ))
 
 
           outDf %>%
