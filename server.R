@@ -587,7 +587,7 @@ shinyServer(function(input, output, session) {
             gridX=df$data$.y[ idxX  ],
             gridY=df$data$.y[ idxY  ],
             grdImageNameUsed=df$data$grdImageNameUsed[idxX], 
-            Image=df$data$Image[idxX]  ))
+            Image=df$data$Image[idxX]  )
 
 
           outDf %>%
