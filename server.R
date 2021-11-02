@@ -563,44 +563,40 @@ shinyServer(function(input, output, session) {
 
 
   } )
-#   
-#   observeEvent( input$runBtn, {
-#       progress <- Progress$new(session, min=1, max=1)
-#       progress$set(message="Running ... please wait ...")
-#       
-#       #shinyjs::disable("applyBtn")
-#       shinyjs::disable("runBtn")
-#       
-#       
-#       tryCatch({
-#           ctx <- getCtx(session)
-#           
-#           #inData <- ctx$select()
-#           
-#           idxX <- which(df$data$variable == "gridX")
-#           idxY <- which(df$data$variable == "gridY")
-#           idxC <- which(df$data$variable == "gridY" )
-#           
-# 
-#           outDf <- data.frame(  
-#             .ci=df$data$.ci[ idxC  ],
-#             gridX=df$data$.y[ idxX  ],
-#             gridY=df$data$.y[ idxY  ])
-#           
-#           #dfIdx <-  match(interaction(inData$.ri, inData$.ci),
-#           #                interaction(df$data$.ri, df$data$.ci))
-#           #inData$.y[ dfIdx   ] <- df$data$.y[dfIdx]
-#           
-#           outDf %>%
-#           ctx$addNamespace() %>%
-#           ctx$save()
-#           progress$close()  
-#       }, error = function(e) {
-#         progress$set(message=paste0("Failed : ", toString(e)))
-#         print(paste0("Failed : ", toString(e)))
-#       })
-#       
-#   }) #END observeEvent : input$saveBtn
+
+  observeEvent( input$runBtn, {
+      progress <- Progress$new(session, min=1, max=1)
+      progress$set(message="Running ... please wait ...")
+
+      shinyjs::disable("runBtn")
+
+
+      tryCatch({
+          ctx <- getCtx(session)
+
+          #inData <- ctx$select()
+
+          idxX <- which(df$data$variable == "gridX")
+          idxY <- which(df$data$variable == "gridY")
+          idxC <- which(df$data$variable == "gridY" )
+
+
+          outDf <- data.frame(
+            .ci=df$data$.ci[ idxC  ],
+            gridX=df$data$.y[ idxX  ],
+            gridY=df$data$.y[ idxY  ])
+
+
+          outDf %>%
+          ctx$addNamespace() %>%
+          ctx$save()
+          progress$close()
+      }, error = function(e) {
+        progress$set(message=paste0("Failed : ", toString(e)))
+        print(paste0("Failed : ", toString(e)))
+      })
+
+  }) #END observeEvent : input$saveBtn
 
 })
 
