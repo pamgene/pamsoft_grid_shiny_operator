@@ -602,6 +602,7 @@ shinyServer(function(input, output, session) {
   # Called after all widgets are loaded 
   observeEvent( input$pageLoaded, {
     shinyjs::enable("gridBtn")
+    remove_modal_spinner()
   })
 })
 
@@ -704,8 +705,7 @@ get_data <- function( session ){
   names(cTable) = required.cnames
   names(rTable) = required.rnames
   
-  
-  
+
   qtTable <- ctx$select(c(".ci", ".ri", ".y"))
   cTable[[".ci"]] = seq(0, nrow(cTable)-1)
   
@@ -713,10 +713,16 @@ get_data <- function( session ){
   
   rTable[[".ri"]] = seq(0, nrow(rTable)-1)
   
+  
+
   qtTable = dplyr::left_join(qtTable,rTable,by=".ri")
+  
+  show_modal_spinner(spin="fading-circle", text = "Loading data (0%)")
   qtTable$variable = sapply(qtTable$variable, remove_variable_ns)
   
   progress$close()
+  
+  show_modal_spinner(spin="fading-circle", text = "Loading data (50%)")
   
   return(qtTable)
   
@@ -729,6 +735,7 @@ prep_image_folder <- function(session, docId){
   
   progress$set(message="Downloading images")
   
+  
   ctx <- getCtx(session)
   
   
@@ -737,6 +744,8 @@ prep_image_folder <- function(session, docId){
   filename <- tempfile()
   writeBin(ctx$client$fileService$download(docId), filename)
   
+  show_modal_spinner(spin="fading-circle", text = "Loading data (70%)")
+  
   on.exit(unlink(filename, recursive = TRUE, force = TRUE))
   
   image_list <- vector(mode="list", length=length(grep(".zip", doc$name)) )
@@ -744,6 +753,7 @@ prep_image_folder <- function(session, docId){
   # unzip archive (which presumably exists at this point)
   tmpdir <- tempfile()
   unzip(filename, exdir = tmpdir)
+  show_modal_spinner(spin="fading-circle", text = "Loading data (90%)")
   
   imageResultsPath <- file.path(list.files(tmpdir, full.names = TRUE), "ImageResults")
   
