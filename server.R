@@ -399,8 +399,7 @@ shinyServer(function(input, output, session) {
                               
                               table.on('click.dt', 'tr', function(e, dt, type, indexes) {
                               var row = $(this).index()+1;
-                              //$(this).children('td').html();
-                              
+
                               Shiny.setInputValue('selectedImageRow', row);
                           })")
                  ) 
@@ -554,11 +553,7 @@ shinyServer(function(input, output, session) {
     
 
 
-
     remove_modal_spinner()
-
-
-
   } )
 
   observeEvent( input$runBtn, {
@@ -598,6 +593,11 @@ shinyServer(function(input, output, session) {
 
   }) #END observeEvent : input$saveBtn
 
+  
+  # Called after all widgets are loaded 
+  observeEvent( input$pageLoaded, {
+    shinyjs::enable("gridBtn")
+  })
 })
 
 

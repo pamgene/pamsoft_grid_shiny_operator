@@ -6,15 +6,14 @@ library(shinycssloaders)
 library(shinybusy)
 
 js <- "
+$(document).on('shiny:sessioninitialized', function(event) {
+  Shiny.setInputValue('pageLoaded', Math.random());
+});
 
 $(document).on('shiny:value', function(evt) {
 
   if(evt.name === 'selectedImage') {
     setTimeout(function(){
-      //var imgDiv = document.getElementById('selectedImage');
-      //imgDiv.style.visibility = 'hidden';
-
-
       grid = new Array();
       
       for (let i = 0; i < globalThis.x.length; i++) {
@@ -30,8 +29,6 @@ $(document).on('shiny:value', function(evt) {
       
       
       customMessageHandler(grid)
-      
-
     }, 0);
   }
 });
@@ -72,9 +69,12 @@ shinyUI(
               
                   var MouseTouchTracker = function(canvas, callback){
                       this.isDragging = false;
+                      this.isRotating = false;
+
                       this.list = new Array();
               
                       function processEvent(evt) {
+                      
                           var rect = canvas.getBoundingClientRect();
                           var offsetTop = rect.top;
                           var offsetLeft = rect.left;
@@ -95,7 +95,8 @@ shinyUI(
                       function onDown(evt) {
                           evt.preventDefault();
                           var coords = processEvent(evt);
-                          callback('down', coords.x, coords.y);
+                          
+                          callback('down', coords.x, coords.y, evt.shiftKey);
                       }
               
                       function onUp(evt) {
@@ -144,9 +145,9 @@ shinyUI(
               
                   globalThis.grid = list.map(spot => new Arc(spot.x, spot.y, spot.radius, Math.PI * 2));
                   globalThis.mtt = new MouseTouchTracker(canvas,
-                      function(evtType, x, y) {
+                      function(evtType, x, y, isRotate) {
                           ctx.clearRect(0, 0, canvas.width, canvas.height);
-              
+                          
                           switch(evtType) {
               
                               case 'down':
@@ -160,12 +161,20 @@ shinyUI(
                                   } else {
                                       this.isDragging = true;
                                   }
+                                  
+                                  if(isRotate){
+                                    this.isRotating = true;
+                                  }else{
+                                    this.isRotating = false;
+                                  }
+                                  
                                   break;
               
                               case 'up':
 
                                   globalThis.grid.forEach(el => el.isDragging = false);
                                   this.isDragging = false;
+                                  this.isRotating = false;
 
                                   Shiny.setInputValue('gridOverlay', globalThis.grid);
                                   break;
@@ -184,11 +193,43 @@ shinyUI(
                                       found.x += dx;
                                       found.y += dy;
                                   } else {
+                                  
                                       if (this.isDragging){
-                                          globalThis.grid.forEach(el => {
-                                              el.x += dx;
-                                              el.y += dy;
-                                          })
+                                          if(this.isRotating){
+                                          
+                                            var radians = (Math.PI / 180) * 0.2;
+                                            
+                                            if(dy > 0){
+                                              radians *= -1;
+                                            }
+                   
+                                            var cos = Math.cos(radians);
+                                            var sin = Math.sin(radians);
+                                            
+                                            var N = globalThis.grid.length;
+                                            var cx = 0;
+                                            var cy = 0;
+                                            
+                                            globalThis.grid.forEach(el => {
+                                                cx += el.x;
+                                                cy += el.y;
+                                            })
+                                            cx /= N;
+                                            cy /= N;
+                                            
+                                            globalThis.grid.forEach(el => {
+                                                el.x = (cos * (el.x - cx)) + (sin * (el.y - cy)) + cx;
+                                                el.y = (cos * (el.y - cy)) - (sin * (el.x - cx)) + cy;
+                                            })
+                                            
+
+                                            
+                                          }else{
+                                            globalThis.grid.forEach(el => {
+                                                el.x += dx;
+                                                el.y += dy;
+                                            })
+                                          }
                                           
                                       }
                                   }
@@ -279,7 +320,7 @@ shinyUI(
                                   disabled(actionButton("runBtn", label = "Run", width="120px"  )))),
                   column(2, 
                          tags$div(title="Create a new grid for the current image", 
-                                  actionButton("gridBtn", label = "New Grid", width="120px"  )))
+                                  disabled(actionButton("gridBtn", label = "New Grid", width="120px"  ))))
                   ),
         fluidRow( column(8, imageOutput(outputId = "selectedImage")   ,  
                          style = "height:5px; visibility:hidden") ),
