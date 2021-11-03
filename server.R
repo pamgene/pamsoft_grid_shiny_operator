@@ -11,9 +11,11 @@ library(DT)
 library(stringr)
 library(tiff)
 
-#http://127.0.0.1:5402/admin/w/378f18ac66a21562f6dc43c28401df71/ds/da68ad6d-2fbd-4a72-903c-68ce84607991
-#options("tercen.workflowId"= "378f18ac66a21562f6dc43c28401df71")
-#options("tercen.stepId"= "da68ad6d-2fbd-4a72-903c-68ce84607991")
+
+
+#http://localhost:5402/admin/w/cff9a1469cd1de708b87bca99f003d42/ds/de38f46b-f300-4168-a8c0-b8cb898407cb
+#options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
+#options("tercen.stepId"= "de38f46b-f300-4168-a8c0-b8cb898407cb")
 
 
 ############################################
@@ -43,7 +45,7 @@ shinyServer(function(input, output, session) {
   gridSpotList <- reactiveValues( gridList=NULL, selectedGrid=1,
                                   imageList=NULL, selectedImage=-1 )
   
-  grid      <- reactiveValues( X=NULL, Y=NULL)
+  grid      <- reactiveValues( X=NULL, Y=NULL, XD=NULL, YD=NULL)
   selection <- reactiveValues( image=NULL  )
 
   mode      <- reactive({getMode(session)})
@@ -97,7 +99,7 @@ shinyServer(function(input, output, session) {
     grid$Y <- (dfImg() %>% filter(variable == "gridX") %>% pull(.y))
     grid$X <- (dfImg() %>% filter(variable == "gridY") %>% pull(.y))
     
-
+    
     bf <- as.double(input$brightness)
     ct <- as.double(input$contrast)
     img <- drop(suppressWarnings( tiff::readTIFF(selectedImage) * 16 ))
@@ -543,11 +545,14 @@ shinyServer(function(input, output, session) {
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdRotation"] = 0
       
       # Rebuiild image list
-      gridSpotList$gridList <- unique(df$data$grdImageNameUsed)
+      gridSpotList$gridList <- sort(unique(df$data$grdImageNameUsed))
+      gridSpotList$selectedGrid <- which( gridSpotList$gridList ==  selection$image)
       
       shiny::updateSelectInput(session=session, inputId="imageused", 
                                choices=gridSpotList$gridList,
                                selected = gridSpotList$gridList[[gridSpotList$selectedGrid]] )
+      
+      session$sendCustomMessage("init_grid_images", gridSpotList$selectedImage)
 
     }
     
@@ -694,7 +699,6 @@ get_data <- function( session ){
   
   cTable <- ctx$cselect(required.cnames.with.ns)
   rTable <- ctx$rselect(required.rnames.with.ns)
-  
   
   # override the names
   names(cTable) = required.cnames

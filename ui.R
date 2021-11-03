@@ -196,16 +196,6 @@ shinyUI(
                                   
                                       if (this.isDragging){
                                           if(this.isRotating){
-                                          
-                                            var radians = (Math.PI / 180) * 0.2;
-                                            
-                                            if(dy > 0){
-                                              radians *= -1;
-                                            }
-                   
-                                            var cos = Math.cos(radians);
-                                            var sin = Math.sin(radians);
-                                            
                                             var N = globalThis.grid.length;
                                             var cx = 0;
                                             var cy = 0;
@@ -216,6 +206,21 @@ shinyUI(
                                             })
                                             cx /= N;
                                             cy /= N;
+                                            
+                                            var radians = (Math.PI / 180) * 0.2;
+                                            
+                                            if(dy > 0 && startX > cx){
+                                              radians *= -1;
+                                            }
+                                            
+                                            if(dy < 0 && startX < cx){
+                                              radians *= -1;
+                                            }
+                   
+                                            var cos = Math.cos(radians);
+                                            var sin = Math.sin(radians);
+                                            
+                                            
                                             
                                             globalThis.grid.forEach(el => {
                                                 el.x = (cos * (el.x - cx)) + (sin * (el.y - cy)) + cx;
