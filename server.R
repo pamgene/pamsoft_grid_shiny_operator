@@ -602,6 +602,10 @@ shinyServer(function(input, output, session) {
 
           idxX <- which(df$data$variable == "gridX")
           idxY <- which(df$data$variable == "gridY")
+          idxFX <- which(df$data$variable == "grdXFixedPosition")
+          idxFY <- which(df$data$variable == "grdYFixedPosition")
+          idxR <- which(df$data$variable == "diameter")
+          idxM <- which(df$data$variable == "manual")
           idxC <- which(df$data$variable == "gridY" )
 
 
@@ -609,6 +613,10 @@ shinyServer(function(input, output, session) {
             .ci=df$data$.ci[ idxC  ],
             gridX=df$data$.y[ idxX  ],
             gridY=df$data$.y[ idxY  ],
+            grdXFixedPosition=df$data$.y[ idxFX  ],
+            grdYFixedPosition=df$data$.y[ idxFY  ],
+            diameter=df$data$.y[ idxR  ],
+            manual=df$data$.y[ idxM  ],
             grdImageNameUsed=df$data$grdImageNameUsed[idxX], 
             Image=df$data$Image[idxX]  )
 
