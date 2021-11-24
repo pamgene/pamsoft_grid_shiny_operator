@@ -105,9 +105,7 @@ shinyServer(function(input, output, session) {
     grid$MANUAL <- (dfImg() %>% filter(variable == "manual") %>% pull(.y))
     
     grid$TYPE <- (dfImg() %>% filter(variable == "bad") %>% pull(.y)) +
-      (dfImg() %>% filter(variable == "empty") %>% pull(.y)) * 2 +
-      (dfImg() %>% filter(variable == "outlier") %>% pull(.y)) *4 + 
-      (dfImg() %>% filter(variable == "replaced") %>% pull(.y)) * 8
+      (dfImg() %>% filter(variable == "empty") %>% pull(.y)) * 2 
     
     
     bf <- as.double(input$brightness)
@@ -174,6 +172,8 @@ shinyServer(function(input, output, session) {
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = X
 
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "manual"] = 1
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "bad"] = 0
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "empty"] = 0
 
     df$data <- data
   })
@@ -547,8 +547,6 @@ shinyServer(function(input, output, session) {
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "diameter"] = r
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "bad"] = 0
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "empty"] = 0
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "outlier"] = 0
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "replaced"] = 0
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "manual"] = 1
       
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = x
@@ -570,8 +568,6 @@ shinyServer(function(input, output, session) {
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "diameter"] = r
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "bad"] = 0
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "empty"] = 0
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "outlier"] = 0
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "replaced"] = 0
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "manual"] = 1
       
       # Rebuiild image list
