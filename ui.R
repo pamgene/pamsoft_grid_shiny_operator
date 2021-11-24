@@ -83,20 +83,19 @@ shinyUI(
 
                           if(typeBin.charAt(0) == 1){ //BAD
                             red = 255;
-                            green = 50;
-                            blue = 50;
+                            green = 0;
+                            blue = 0;
                             
-                          }
-                          if(typeBin.charAt(1) == 1){ //EMPTY
-                            ctx.setLineDash([5,5])
-                          }
-                          if(typeBin.charAt(2) == 1){ //OUTLIER
+                          }else if(typeBin.charAt(1) == 1){ //EMPTY
                             blue = 255;
                           }
-                          if(typeBin.charAt(3) == 1){ //REPLACED
-                            ctx.setLineDash([5,2])
-                            
-                          }
+                          //if(typeBin.charAt(2) == 1){ //OUTLIER
+                          //  blue = 255;
+                          //}
+                          //if(typeBin.charAt(3) == 1){ //REPLACED
+                          //  ctx.setLineDash([5,2])
+                          //  
+                          //}
                           ctx.strokeStyle = rgbToHex(red, green, blue);
                           
 
