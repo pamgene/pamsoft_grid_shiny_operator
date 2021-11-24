@@ -13,9 +13,9 @@ library(tiff)
 
 
 
-#http://localhost:5402/admin/w/cff9a1469cd1de708b87bca99f003d42/ds/de38f46b-f300-4168-a8c0-b8cb898407cb
-#options("tercen.workflowId"= "cff9a1469cd1de708b87bca99f003d42")
-#options("tercen.stepId"= "de38f46b-f300-4168-a8c0-b8cb898407cb")
+#http://localhost:5402/admin/w/ac924e73ee442b910408775d770a36be/ds/b2f94ffe-9764-4d76-8fa4-ddf0b54ba6eb
+# options("tercen.workflowId"= "ac924e73ee442b910408775d770a36be")
+# options("tercen.stepId"= "b2f94ffe-9764-4d76-8fa4-ddf0b54ba6eb")
 
 
 ############################################
@@ -45,7 +45,9 @@ shinyServer(function(input, output, session) {
   gridSpotList <- reactiveValues( gridList=NULL, selectedGrid=1,
                                   imageList=NULL, selectedImage=-1 )
   
-  grid      <- reactiveValues( X=NULL, Y=NULL, XD=NULL, YD=NULL)
+  grid      <- reactiveValues( X=NULL, Y=NULL, 
+                               XD=NULL, YD=NULL, 
+                               R=NULL, TYPE=NULL, MANUAL=NULL)
   selection <- reactiveValues( image=NULL  )
 
   mode      <- reactive({getMode(session)})
@@ -99,6 +101,14 @@ shinyServer(function(input, output, session) {
     grid$Y <- (dfImg() %>% filter(variable == "gridX") %>% pull(.y))
     grid$X <- (dfImg() %>% filter(variable == "gridY") %>% pull(.y))
     
+    grid$R <- (dfImg() %>% filter(variable == "diameter") %>% pull(.y))
+    grid$MANUAL <- (dfImg() %>% filter(variable == "manual") %>% pull(.y))
+    
+    grid$TYPE <- (dfImg() %>% filter(variable == "bad") %>% pull(.y)) +
+      (dfImg() %>% filter(variable == "empty") %>% pull(.y)) * 2 +
+      (dfImg() %>% filter(variable == "outlier") %>% pull(.y)) *4 + 
+      (dfImg() %>% filter(variable == "replaced") %>% pull(.y)) * 8
+    
     
     bf <- as.double(input$brightness)
     ct <- as.double(input$contrast)
@@ -135,9 +145,11 @@ shinyServer(function(input, output, session) {
 
     x <- grid$X
     y <- grid$Y
-    r <- rep( off, length(x) )
+    r <- grid$R/2 #rep( off, length(x) )
+    t <- grid$TYPE
 
-    gridDf <- data.frame(x=x, y=y, radius=r)
+  #IF manually moving th egrid, shoulld segmentation run again, or onl if a new grid is created?
+    gridDf <- data.frame(x=x, y=y, radius=r, type=t, manual=grid$MANUAL[[1]])
     session$sendCustomMessage("imageDisplay", gridDf)
   })
 
@@ -150,8 +162,8 @@ shinyServer(function(input, output, session) {
     gridInput<-as.vector(input$gridOverlay)
 
 
-    X <- gridInput[seq.int(1, N, by = 5)]
-    Y <- gridInput[seq.int(2, N, by = 5)]
+    X <- gridInput[seq.int(1, N, by = 6)]
+    Y <- gridInput[seq.int(2, N, by = 6)]
 
 
     data <- df$data
@@ -161,6 +173,7 @@ shinyServer(function(input, output, session) {
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridX"] = Y
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = X
 
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "manual"] = 1
 
     df$data <- data
   })
@@ -518,11 +531,12 @@ shinyServer(function(input, output, session) {
 
     x <- unlist(spotsX)
     y <- unlist(spotsY)
-    r <- rep( off, length(x) )
+    r <- rep( off*2, length(x) )
+    t <- rep( 0, length(x) )
 
-
-    newGrid <- data.frame(x=x, y=y, radius=r)
+    newGrid <- data.frame(x=x, y=y, radius=r, type=t, manual=1)
     session$sendCustomMessage("imageDisplay", newGrid)
+
 
 
     if(selection$image == gridSpotList$gridList[[gridSpotList$selectedGrid]]){
@@ -530,8 +544,17 @@ shinyServer(function(input, output, session) {
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridX"] = x
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridY"] = y
       
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "diameter"] = r
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "bad"] = 0
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "empty"] = 0
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "outlier"] = 0
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "replaced"] = 0
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "manual"] = 1
+      
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = x
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = y
+      
+      
     }else{
       # Update the image used for gridding
       df$data$grdImageNameUsed[df$data$Image == selection$image  ] = selection$image
@@ -543,6 +566,13 @@ shinyServer(function(input, output, session) {
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = y
       
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdRotation"] = 0
+      
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "diameter"] = r
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "bad"] = 0
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "empty"] = 0
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "outlier"] = 0
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "replaced"] = 0
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "manual"] = 1
       
       # Rebuiild image list
       gridSpotList$gridList <- sort(unique(df$data$grdImageNameUsed))

@@ -21,6 +21,7 @@ $(document).on('shiny:value', function(evt) {
         spot.x = globalThis.x[i]
         spot.y = globalThis.y[i]
         spot.radius = globalThis.radius[i]
+        spot.type = globalThis.type[i]
         grid.push(spot)
       }
       
@@ -45,13 +46,23 @@ shinyUI(
     tags$script(HTML(js)),
     tags$head(HTML("<script type='text/javascript'>
                   
+                  function componentToHex(c) {
+                      var hex = c.toString(16);
+                      return hex.length == 1 ? '0' + hex : hex;
+                    }
+                    
+                    function rgbToHex(r, g, b) {
+                      return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b);
+                    }
+                  
                   var customMessageHandler = function(list){
-                  var Arc = function(x, y, radius, radians) {
+                  var Arc = function(x, y, radius, radians, type) {
                       this.x = x;
                       this.y = y;
                       this.radius = radius;
                       this.radians = radians;
                       this.isDragging = false;
+                      this.type = type;
               
               
                       this.render = function(ctx) {
@@ -60,7 +71,35 @@ shinyUI(
                           ctx.beginPath();
                           ctx.arc(this.x, this.y, this.radius, 0, this.radians, false);
                           ctx.linewidth = 2;
-                          ctx.strokeStyle = '#00FF00';
+                          typeBin = (type >>> 0).toString(2)
+                          var red = 0;
+                          var blue = 0;
+                          var green = 0;
+                          
+                          if (type == 0){
+                            green = 255;
+                            ctx.linewidth = 2;
+                          }
+
+                          if(typeBin.charAt(0) == 1){ //BAD
+                            red = 255;
+                            green = 50;
+                            blue = 50;
+                            
+                          }
+                          if(typeBin.charAt(1) == 1){ //EMPTY
+                            ctx.setLineDash([5,5])
+                          }
+                          if(typeBin.charAt(2) == 1){ //OUTLIER
+                            blue = 255;
+                          }
+                          if(typeBin.charAt(3) == 1){ //REPLACED
+                            ctx.setLineDash([5,2])
+                            
+                          }
+                          ctx.strokeStyle = rgbToHex(red, green, blue);
+                          
+
                           ctx.stroke();
               
                           ctx.restore();
@@ -142,12 +181,16 @@ shinyUI(
                   canvas.height = 520
               
                   var ctx = canvas.getContext('2d');
+                  
+
+          
               
-                  globalThis.grid = list.map(spot => new Arc(spot.x, spot.y, spot.radius, Math.PI * 2));
+                  globalThis.grid = list.map(spot => new Arc(spot.x, spot.y, spot.radius, Math.PI * 2, spot.type));
                   globalThis.mtt = new MouseTouchTracker(canvas,
                       function(evtType, x, y, isRotate) {
                           ctx.clearRect(0, 0, canvas.width, canvas.height);
                           
+
                           switch(evtType) {
               
                               case 'down':
@@ -243,6 +286,13 @@ shinyUI(
               
                           ctx.drawImage(gridImage,0,0)
                           globalThis.grid.forEach(spot => spot.render(ctx));
+                          
+ctx.fillStyle = '#00AA00';
+                  
+                  if( globalThis.manual == 1){
+                  ctx.fillStyle = '#FFFF00';
+                  }
+                  ctx.fillRect(0,0, 20,20);
               
                       }
                   );
@@ -250,6 +300,12 @@ shinyUI(
                   
                   ctx.drawImage(gridImage,0,0)
                   globalThis.grid.forEach(spot => spot.render(ctx));
+                  ctx.fillStyle = '#007700';
+                  
+                  if( globalThis.manual == 1){
+                  ctx.fillStyle = '#FFFF33';
+                  }
+                  ctx.fillRect(0,0, 20,20);
               }
               
               
@@ -263,7 +319,9 @@ shinyUI(
                 globalThis.x      = gridList.x;
                 globalThis.y      = gridList.y;
                 globalThis.radius = gridList.radius;
+                globalThis.type   = gridList.type;
 
+                globalThis.manual = gridList.manual[0];
               });
               
 
