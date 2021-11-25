@@ -13,9 +13,9 @@ library(tiff)
 
 
 
-#http://localhost:5402/admin/w/ac924e73ee442b910408775d770a36be/ds/b2f94ffe-9764-4d76-8fa4-ddf0b54ba6eb
+#http://localhost:5402/admin/w/ac924e73ee442b910408775d770a36be/ds/c3920637-b8c7-4674-be5d-a67246064b2d
 # options("tercen.workflowId"= "ac924e73ee442b910408775d770a36be")
-# options("tercen.stepId"= "b2f94ffe-9764-4d76-8fa4-ddf0b54ba6eb")
+# options("tercen.stepId"= "c3920637-b8c7-4674-be5d-a67246064b2d")
 
 
 ############################################
@@ -86,9 +86,9 @@ shinyServer(function(input, output, session) {
 
     m <- mode()
     
-    if( !is.null(m) && m == "run"){
+    # if( !is.null(m) && m == "run"){
       shinyjs::enable("runBtn")
-    }
+    # }
 
     outfile <- tempfile(fileext = '.jpeg', tmpdir = imgDir)
     
@@ -98,8 +98,8 @@ shinyServer(function(input, output, session) {
     
     dfImg <- reactive(df$data %>% filter(Image == selection$image ) )
     
-    grid$Y <- (dfImg() %>% filter(variable == "gridX") %>% pull(.y))
-    grid$X <- (dfImg() %>% filter(variable == "gridY") %>% pull(.y))
+    grid$X <- (dfImg() %>% filter(variable == "gridX") %>% pull(.y))
+    grid$Y <- (dfImg() %>% filter(variable == "gridY") %>% pull(.y))
     
     grid$R <- (dfImg() %>% filter(variable == "diameter") %>% pull(.y))
     grid$MANUAL <- (dfImg() %>% filter(variable == "manual") %>% pull(.y))
@@ -168,8 +168,8 @@ shinyServer(function(input, output, session) {
 
     # Changes to the images used for gridding are applied to all relevant images
 
-    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridX"] = Y
-    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = X
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridX"] = X
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = Y
 
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "manual"] = 1
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "bad"] = 0
@@ -529,8 +529,8 @@ shinyServer(function(input, output, session) {
 
     off <- (spotPitch * spotSize)/2
 
-    x <- unlist(spotsX)
-    y <- unlist(spotsY)
+    x <- unlist(spotsY)
+    y <- unlist(spotsX)
     r <- rep( off*2, length(x) )
     t <- rep( 0, length(x) )
 
@@ -594,7 +594,21 @@ shinyServer(function(input, output, session) {
       shinyjs::disable("runBtn")
       shinyjs::disable("gridBtn")
 
-
+      
+      # # Due to the image rotation, the grid for the manually placed needs to be flipped back
+      # if( any(unique(df$data$.y[df$data$variable == "manual"]))==1){
+      #   manualCi = df$data$.ci[df$data$.y == 1 & df$data$variable == "manual"]
+      # 
+      # 
+      #   manualIdx <- (unlist(lapply( df$data$.ci, function(x){ x %in% manualCi } )))
+      #   
+      #   oldX <- df$data$.y[manualIdx & df$data$variable == "gridX"]
+      #   oldY <- df$data$.y[manualIdx & df$data$variable == "gridY"]
+      # 
+      #   # df$data$.y[manualIdx & df$data$variable == "gridY"] <- oldX
+      #   # df$data$.y[manualIdx & df$data$variable == "gridX"] <- oldY
+      # 
+      # }
       tryCatch({
           ctx <- getCtx(session)
 
@@ -608,7 +622,7 @@ shinyServer(function(input, output, session) {
           idxM <- which(df$data$variable == "manual")
           idxC <- which(df$data$variable == "gridY" )
 
-
+     
           outDf <- data.frame(
             .ci=df$data$.ci[ idxC  ],
             gridX=df$data$.y[ idxX  ],
@@ -630,6 +644,8 @@ shinyServer(function(input, output, session) {
         print(paste0("Failed : ", toString(e)))
       })
 
+      # df$data$.y[manualIdx & df$data$variable == "gridY"] <- oldY
+      # df$data$.y[manualIdx & df$data$variable == "gridX"] <- oldX
   }) #END observeEvent : input$saveBtn
 
   
