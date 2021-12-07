@@ -45,7 +45,7 @@ shinyServer(function(input, output, session) {
   gridSpotList <- reactiveValues( gridList=NULL, selectedGrid=1,
                                   imageList=NULL, selectedImage=-1 )
   
-  grid      <- reactiveValues( X=NULL, Y=NULL, 
+  grid      <- reactiveValues( X=NULL, Y=NULL, ROW=NULL, COL=NULL,
                                XD=NULL, YD=NULL, 
                                R=NULL, TYPE=NULL, MANUAL=NULL)
   selection <- reactiveValues( image=NULL  )
@@ -100,6 +100,9 @@ shinyServer(function(input, output, session) {
     
     grid$X <- (dfImg() %>% filter(variable == "gridX") %>% pull(.y))
     grid$Y <- (dfImg() %>% filter(variable == "gridY") %>% pull(.y))
+    
+    grid$ROW <- (dfImg() %>% filter(variable == "gridX") %>% pull(spotRow))
+    grid$COL <- (dfImg() %>% filter(variable == "gridY") %>% pull(spotCol))
     
     grid$R <- (dfImg() %>% filter(variable == "diameter") %>% pull(.y))
     grid$MANUAL <- (dfImg() %>% filter(variable == "manual") %>% pull(.y))
@@ -160,20 +163,41 @@ shinyServer(function(input, output, session) {
     gridInput<-as.vector(input$gridOverlay)
 
 
-    X <- gridInput[seq.int(1, N, by = 6)]
-    Y <- gridInput[seq.int(2, N, by = 6)]
+    Y <- gridInput[seq.int(1, N, by = 6)]
+    X <- gridInput[seq.int(2, N, by = 6)]
 
-
+    currentX <- grid$X
+    currentY <- grid$Y
+    
+    spotCol <- grid$COL
+    spotRow <- grid$ROW
+    
     data <- df$data
+    
+    if (all( X != currentX ) && all( Y != currentY )){
+        # The whole grid was re-positioned
+        # Might consider everything to be fixed later
+    }else{
+      # Set the individually placed spots as being fixed positions
+      changedSpot <- which( currentX != X & currentY != Y) 
+      
 
+      
+      data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] 
+                   & df$data$variable == "grdFixedXPosition" & df$data$spotRow == spotRow & df$data$spotCol == spotCol] <- X
+      
+      data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] 
+                   & df$data$variable == "grdFixedYPosition" & df$data$spotRow == spotRow & df$data$spotCol == spotCol] <- Y
+    }
+    
+    
     # Changes to the images used for gridding are applied to all relevant images
-
-    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridX"] = Y
-    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = X
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridX"] = X
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = Y
 
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "manual"] = 1
-    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "bad"] = 0
-    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "empty"] = 0
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "bad"]    = 0
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "empty"]  = 0
 
     df$data <- data
   })
@@ -549,8 +573,8 @@ shinyServer(function(input, output, session) {
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "empty"] = 0
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "manual"] = 1
       
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = y
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = x
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = 0 #y
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = 0 #x
       
       
     }else{
@@ -560,8 +584,8 @@ shinyServer(function(input, output, session) {
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridX"] = y
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridY"] = x
       
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = y
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = x
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = 0 #y
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = 0 #x
       
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdRotation"] = 0
       
