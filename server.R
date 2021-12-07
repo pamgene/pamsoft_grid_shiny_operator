@@ -541,27 +541,27 @@ shinyServer(function(input, output, session) {
 
     if(selection$image == gridSpotList$gridList[[gridSpotList$selectedGrid]]){
       # Update position for all grids
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridX"] = x
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridY"] = y
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridX"] = y
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridY"] = x
       
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "diameter"] = r
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "bad"] = 0
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "empty"] = 0
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "manual"] = 1
       
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = x
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = y
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = y
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = x
       
       
     }else{
       # Update the image used for gridding
       df$data$grdImageNameUsed[df$data$Image == selection$image  ] = selection$image
       
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridX"] = x
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridY"] = y
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridX"] = y
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridY"] = x
       
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = x
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = y
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = y
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = x
       
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdRotation"] = 0
       
