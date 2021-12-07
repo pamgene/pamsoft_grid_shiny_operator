@@ -13,9 +13,9 @@ library(tiff)
 
 
 
-#http://localhost:5402/admin/w/ac924e73ee442b910408775d770a36be/ds/c3920637-b8c7-4674-be5d-a67246064b2d
-# options("tercen.workflowId"= "ac924e73ee442b910408775d770a36be")
-# options("tercen.stepId"= "c3920637-b8c7-4674-be5d-a67246064b2d")
+#http://localhost:5402/admin/w/11143520a88672e0a07f89bb88075d15/ds/02b18eb7-7644-4d5d-9c62-b325cb462cff
+# options("tercen.workflowId"= "11143520a88672e0a07f89bb88075d15")
+# options("tercen.stepId"= "02b18eb7-7644-4d5d-9c62-b325cb462cff")
 
 
 ############################################
@@ -141,8 +141,8 @@ shinyServer(function(input, output, session) {
 
     off <- (spotPitch * spotSize)/2
 
-    x <- grid$X
-    y <- grid$Y
+    x <- grid$Y
+    y <- grid$X
     r <- grid$R/2 #rep( off, length(x) )
     t <- grid$TYPE
 
@@ -168,8 +168,8 @@ shinyServer(function(input, output, session) {
 
     # Changes to the images used for gridding are applied to all relevant images
 
-    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridX"] = X
-    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = Y
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridX"] = Y
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = X
 
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "manual"] = 1
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "bad"] = 0
