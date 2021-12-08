@@ -169,26 +169,26 @@ shinyServer(function(input, output, session) {
     currentX <- grid$X
     currentY <- grid$Y
     
-    spotCol <- grid$COL
-    spotRow <- grid$ROW
+    # spotCol <- grid$COL
+    # spotRow <- grid$ROW
     
     data <- df$data
     
-    if (all( X != currentX ) && all( Y != currentY )){
-        # The whole grid was re-positioned
-        # Might consider everything to be fixed later
-    }else{
-      # Set the individually placed spots as being fixed positions
-      changedSpot <- which( currentX != X & currentY != Y) 
-      
-
-      
-      data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] 
-                   & df$data$variable == "grdFixedXPosition" & df$data$spotRow == spotRow & df$data$spotCol == spotCol] <- X
-      
-      data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] 
-                   & df$data$variable == "grdFixedYPosition" & df$data$spotRow == spotRow & df$data$spotCol == spotCol] <- Y
-    }
+    # if (all( X != currentX ) && all( Y != currentY )){
+    #     # The whole grid was re-positioned
+    #     # Might consider everything to be fixed later
+    # }else{
+    #   # Set the individually placed spots as being fixed positions
+    #   changedSpot <- which( currentX != X & currentY != Y) 
+    #   
+    # 
+    #   
+    #   data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] 
+    #                & df$data$variable == "grdFixedXPosition" & df$data$spotRow == spotRow & df$data$spotCol == spotCol] <- X
+    #   
+    #   data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] 
+    #                & df$data$variable == "grdFixedYPosition" & df$data$spotRow == spotRow & df$data$spotCol == spotCol] <- Y
+    # }
     
     
     # Changes to the images used for gridding are applied to all relevant images
