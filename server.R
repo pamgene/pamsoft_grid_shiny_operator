@@ -13,8 +13,8 @@ library(tiff)
 
 
 
-#http://localhost:5402/admin/w/11143520a88672e0a07f89bb88075d15/ds/02b18eb7-7644-4d5d-9c62-b325cb462cff
-# options("tercen.workflowId"= "11143520a88672e0a07f89bb88075d15")
+#http://localhost:5402/admin/w/c41add34d78230432ba802d98801cec3/ds/02b18eb7-7644-4d5d-9c62-b325cb462cff
+# options("tercen.workflowId"= "c41add34d78230432ba802d98801cec3")
 # options("tercen.stepId"= "02b18eb7-7644-4d5d-9c62-b325cb462cff")
 
 
@@ -791,8 +791,16 @@ get_data <- function( session ){
 
   qtTable = dplyr::left_join(qtTable,rTable,by=".ri")
   
+
+
+  
+  
   show_modal_spinner(spin="fading-circle", text = "Loading data (0%)")
   qtTable$variable = sapply(qtTable$variable, remove_variable_ns)
+  
+  # Fix the position to avoid re-running segmentation position refinement  
+  qtTable$.y[ qtTable$variable == 'grdXFixedPosition' ] = qtTable$.y[ qtTable$variable == 'gridX' ]
+  qtTable$.y[ qtTable$variable == 'grdYFixedPosition' ] = qtTable$.y[ qtTable$variable == 'gridY' ]
   
   progress$close()
   
