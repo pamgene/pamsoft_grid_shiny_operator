@@ -13,8 +13,8 @@ library(tiff)
 
 
 
-#http://localhost:5402/admin/w/c41add34d78230432ba802d98801cec3/ds/02b18eb7-7644-4d5d-9c62-b325cb462cff
-# options("tercen.workflowId"= "c41add34d78230432ba802d98801cec3")
+#http://localhost:5402/admin/w/874ac218cb5c98eed910dc7e070156b2/ds/02b18eb7-7644-4d5d-9c62-b325cb462cff
+# options("tercen.workflowId"= "874ac218cb5c98eed910dc7e070156b2")
 # options("tercen.stepId"= "02b18eb7-7644-4d5d-9c62-b325cb462cff")
 
 
@@ -86,9 +86,9 @@ shinyServer(function(input, output, session) {
 
     m <- mode()
     
-    # if( !is.null(m) && m == "run"){
+    if( !is.null(m) && m == "run"){
       shinyjs::enable("runBtn")
-    # }
+    }
 
     outfile <- tempfile(fileext = '.jpeg', tmpdir = imgDir)
     
