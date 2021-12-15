@@ -13,8 +13,8 @@ library(tiff)
 
 
 
-#http://localhost:5402/admin/w/874ac218cb5c98eed910dc7e070156b2/ds/02b18eb7-7644-4d5d-9c62-b325cb462cff
-# options("tercen.workflowId"= "874ac218cb5c98eed910dc7e070156b2")
+# http://localhost:5402/admin/w/11143520a88672e0a07f89bb88075d15/ds/02b18eb7-7644-4d5d-9c62-b325cb462cff
+# options("tercen.workflowId"= "11143520a88672e0a07f89bb88075d15")
 # options("tercen.stepId"= "02b18eb7-7644-4d5d-9c62-b325cb462cff")
 
 
@@ -146,7 +146,7 @@ shinyServer(function(input, output, session) {
 
     x <- grid$Y
     y <- grid$X
-    r <- grid$R/2 #rep( off, length(x) )
+    r <- grid$R/2 
     t <- grid$TYPE
 
   #IF manually moving th egrid, shoulld segmentation run again, or onl if a new grid is created?
@@ -169,31 +169,16 @@ shinyServer(function(input, output, session) {
     currentX <- grid$X
     currentY <- grid$Y
     
-    # spotCol <- grid$COL
-    # spotRow <- grid$ROW
-    
     data <- df$data
     
-    # if (all( X != currentX ) && all( Y != currentY )){
-    #     # The whole grid was re-positioned
-    #     # Might consider everything to be fixed later
-    # }else{
-    #   # Set the individually placed spots as being fixed positions
-    #   changedSpot <- which( currentX != X & currentY != Y) 
-    #   
-    # 
-    #   
-    #   data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] 
-    #                & df$data$variable == "grdFixedXPosition" & df$data$spotRow == spotRow & df$data$spotCol == spotCol] <- X
-    #   
-    #   data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] 
-    #                & df$data$variable == "grdFixedYPosition" & df$data$spotRow == spotRow & df$data$spotCol == spotCol] <- Y
-    # }
-    
-    
+
     # Changes to the images used for gridding are applied to all relevant images
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridX"] = X
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = Y
+    
+    # Needs to go through position refinement after segmentation 
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdXFixedPosition"] = 0
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdYFixedPosition"] = 0
 
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "manual"] = 1
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "bad"]    = 0
@@ -573,8 +558,8 @@ shinyServer(function(input, output, session) {
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "empty"] = 0
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "manual"] = 1
       
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = 0 #y
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = 0 #x
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = 0 
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = 0 
       
       
     }else{
@@ -584,8 +569,8 @@ shinyServer(function(input, output, session) {
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridX"] = y
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "gridY"] = x
       
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = 0 #y
-      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = 0 #x
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdXFixedPosition"] = 0 
+      df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdYFixedPosition"] = 0 
       
       df$data$.y[df$data$grdImageNameUsed == selection$image & df$data$variable == "grdRotation"] = 0
       
@@ -619,20 +604,7 @@ shinyServer(function(input, output, session) {
       shinyjs::disable("gridBtn")
 
       
-      # # Due to the image rotation, the grid for the manually placed needs to be flipped back
-      # if( any(unique(df$data$.y[df$data$variable == "manual"]))==1){
-      #   manualCi = df$data$.ci[df$data$.y == 1 & df$data$variable == "manual"]
-      # 
-      # 
-      #   manualIdx <- (unlist(lapply( df$data$.ci, function(x){ x %in% manualCi } )))
-      #   
-      #   oldX <- df$data$.y[manualIdx & df$data$variable == "gridX"]
-      #   oldY <- df$data$.y[manualIdx & df$data$variable == "gridY"]
-      # 
-      #   # df$data$.y[manualIdx & df$data$variable == "gridY"] <- oldX
-      #   # df$data$.y[manualIdx & df$data$variable == "gridX"] <- oldY
-      # 
-      # }
+
       tryCatch({
           ctx <- getCtx(session)
 
