@@ -13,9 +13,9 @@ library(tiff)
 
 
 
-# http://localhost:5402/admin/w/11143520a88672e0a07f89bb88075d15/ds/02b18eb7-7644-4d5d-9c62-b325cb462cff
-# options("tercen.workflowId"= "11143520a88672e0a07f89bb88075d15")
-# options("tercen.stepId"= "02b18eb7-7644-4d5d-9c62-b325cb462cff")
+# http://127.0.0.1:5402/admin/w/2e726ebfbecf78338faf09317803614c/ds/68175734-c4f0-41ce-b19b-8d6d80a6f37a
+#options("tercen.workflowId"= "2e726ebfbecf78338faf09317803614c")
+#options("tercen.stepId"= "68175734-c4f0-41ce-b19b-8d6d80a6f37a")
 
 
 ############################################
@@ -664,16 +664,31 @@ remove_variable_ns <- function(varName){
 get_image_list <- function(df, imageUsed){
   req(df)
   
-
-  
-  #print(paste0(deparse(sys.calls()[[sys.nframe()-2]]), " - ", imageUsed))
-  
   values <- df %>% select(c("Image", "grdImageNameUsed")) %>%
             filter(grdImageNameUsed == imageUsed) %>%
             pull(Image) %>% unique() %>% as.data.frame() 
   
+  gridImgIdx <- which(values == imageUsed)
   
-  return(as.data.frame(rev(values[[1]])))
+  values <- values$.[- gridImgIdx]
+  
+  # Sort the list
+  sortVals <- sort(unlist(as.list(lapply( values, function(x){
+    factors <- str_split(x, '[_]', Inf)
+    cyc <- factors[[1]][5]
+    cyc <- as.numeric(substr(cyc, 2, 100))
+    return(cyc)
+  }))), decreasing = TRUE, index.return = TRUE)
+  
+  values <- append(as.list(imageUsed), as.list(values[unlist(sortVals[2])]) )
+  
+  
+  outDf <- do.call(rbind.data.frame, values)
+  colnames(outDf) <- c('.')
+  
+  
+  #return(as.data.frame(rev(values[[1]])))
+  return( outDf )
 }
 
 
@@ -831,11 +846,12 @@ prep_image_folder <- function(session, docId){
 }
 
 
-
+#TODO Update properties to match grid operator
+# -- If spotPitch is 0, defined it based on image width (either 21.5 or 17.7)
 get_operator_props <- function(ctx, imagesFolder){
   sqcMinDiameter <- -1
   grdSpotPitch   <- -1
-  grdSpotSize   <- -1
+  grdSpotSize    <- -1
   
   operatorProps <- ctx$query$operatorSettings$operatorRef$propertyValues
   
