@@ -14,8 +14,8 @@ library(tiff)
 
 
 # http://127.0.0.1:5402/admin/w/2e726ebfbecf78338faf09317803614c/ds/68175734-c4f0-41ce-b19b-8d6d80a6f37a
-#options("tercen.workflowId"= "2e726ebfbecf78338faf09317803614c")
-#options("tercen.stepId"= "68175734-c4f0-41ce-b19b-8d6d80a6f37a")
+# options("tercen.workflowId"= "2e726ebfbecf78338faf09317803614c")
+# options("tercen.stepId"= "68175734-c4f0-41ce-b19b-8d6d80a6f37a")
 
 
 ############################################
@@ -849,43 +849,69 @@ prep_image_folder <- function(session, docId){
 #TODO Update properties to match grid operator
 # -- If spotPitch is 0, defined it based on image width (either 21.5 or 17.7)
 get_operator_props <- function(ctx, imagesFolder){
-  sqcMinDiameter <- -1
-  grdSpotPitch   <- -1
-  grdSpotSize    <- -1
+  sqcMinDiameter     <- 0.45
+  sqcMaxDiameter     <- 0.85
+  grdSpotPitch       <- 0
+  grdSpotSize        <- 0.66
+  grdRotation        <- seq(-2, 2, by=0.25)
+  qntSaturationLimit <- 4095
+  segMethod          <- "Edge"
+  segEdgeSensitivity <- list(0, 0.05)
   
   operatorProps <- ctx$query$operatorSettings$operatorRef$propertyValues
   
   for( prop in operatorProps ){
-    if (prop$name == "MinDiameter"){
+    
+    if (prop$name == "Min Diameter"){
       sqcMinDiameter <- as.numeric(prop$value)
     }
     
-    if (prop$name == "SpotPitch"){
+    if (prop$name == "Max Diameter"){
+      sqcMaxDiameter <- as.numeric(prop$value)
+    }
+    
+    if (prop$name == "Rotation"){
+      
+      if(prop$value == "0"){
+        grdRotation <- as.numeric(prop$value)
+      }else{
+        prts <- as.numeric(unlist(str_split(prop$value, ":")))
+        grdRotation <- seq(prts[1], prts[3], by=prts[2])
+      }
+    }
+    
+    
+    if (prop$name == "Saturation Limit"){
+      qntSaturationLimit <- as.numeric(prop$value)
+    }
+    
+    if (prop$name == "Spot Pitch"){
       grdSpotPitch <- as.numeric(prop$value)
     }
     
-    if (prop$name == "SpotSize"){
+    if (prop$name == "Spot Size"){
       grdSpotSize <- as.numeric(prop$value)
+    }
+    
+    if (prop$name == "Edge Sensitivity"){
+      segEdgeSensitivity[2] <- as.numeric(prop$value)
     }
   }
   
-  if( is.null(grdSpotPitch) || grdSpotPitch == -1 ){
-    grdSpotPitch <- 21.5
-  }
-  
-  if( is.null(grdSpotSize) || grdSpotSize == -1 ){
-    grdSpotSize <- 0.66
-  }
-  
-  if( is.null(sqcMinDiameter) || sqcMinDiameter == -1 ){
-    sqcMinDiameter <- 0.45
+  if( grdSpotPitch == 0 ){
+    
   }
   
   props <- list()
   
   props$sqcMinDiameter <- sqcMinDiameter
+  props$sqcMaxDiameter <- sqcMaxDiameter
   props$grdSpotPitch <- grdSpotPitch
   props$grdSpotSize <- grdSpotSize
+  props$grdRotation <- grdRotation
+  props$qntSaturationLimit <- qntSaturationLimit
+  props$segEdgeSensitivity <- segEdgeSensitivity
+  props$segMethod <- segMethod
   
   
   # Get array layout
@@ -900,6 +926,98 @@ get_operator_props <- function(ctx, imagesFolder){
   layoutDir <- paste(layoutDir, "*Layout*", sep = "/")
   
   props$arraylayoutfile <- Sys.glob(layoutDir)
+}
+
+
+
+get_operator_props <- function(ctx, imagesFolder){
+  sqcMinDiameter     <- 0.45
+  sqcMaxDiameter     <- 0.85
+  grdSpotPitch       <- 0
+  grdSpotSize        <- 0.66
+  grdRotation        <- seq(-2,2, by=0.25)
+  qntSaturationLimit <- 4095
+  segMethod          <- "Edge"
+  segEdgeSensitivity <- list(0, 0.05)
+  isDiagnostic       <- TRUE
+  
+  # Get the image width
+  #Evolve2 -> Width 697
+  
+  operatorProps <- ctx$query$operatorSettings$operatorRef$propertyValues
+  
+  for( prop in operatorProps ){
+    
+    if (prop$name == "Min Diameter"){
+      sqcMinDiameter <- as.numeric(prop$value)
+    }
+    
+    if (prop$name == "Max Diameter"){
+      sqcMaxDiameter <- as.numeric(prop$value)
+    }
+    
+    if (prop$name == "Rotation"){
+      if(prop$value == "0"){
+        grdRotation <- as.numeric(prop$value)
+      }else{
+        prts <- as.numeric(unlist(str_split(prop$value, ":")))
+        grdRotation <- seq(prts[1], prts[3], by=prts[2])
+      }
+    }
+    
+    if (prop$name == "Saturation Limit"){
+      qntSaturationLimit <- as.numeric(prop$value)
+    }
+    
+    if (prop$name == "Spot Pitch"){
+      grdSpotPitch <- as.numeric(prop$value)
+    }
+    
+    if (prop$name == "Spot Size"){
+      grdSpotSize <- as.numeric(prop$value)
+    }
+    
+    if (prop$name == "Diagnostic Output"){
+      if( prop$value == "Yes" ){
+        isDiagnostic <- TRUE
+      }else{
+        isDiagnostic <- FALSE
+      }
+      
+    }
+    
+    if (prop$name == "Edge Sensitivity"){
+      segEdgeSensitivity[2] <- as.numeric(prop$value)
+    }
+  }
+  
+  
+  props <- list()
+  
+  props$sqcMinDiameter <- sqcMinDiameter
+  props$sqcMaxDiameter <- sqcMaxDiameter
+  props$grdSpotPitch <- grdSpotPitch
+  props$grdSpotSize <- grdSpotSize
+  props$grdRotation <- grdRotation
+  props$qntSaturationLimit <- qntSaturationLimit
+  props$segEdgeSensitivity <- segEdgeSensitivity
+  props$segMethod <- segMethod
+  props$isDiagnostic <- isDiagnostic
+  
+  # Get array layout
+  layoutDirParts <- str_split_fixed(imagesFolder, "/", Inf)
+  nParts  <- length(layoutDirParts) -1 # Layout is in parent folder
+  
+  layoutDir = ''
+  
+  for( i in 1:nParts){
+    layoutDir <- paste(layoutDir, layoutDirParts[i], sep = "/")
+  }
+  layoutDir <- paste(layoutDir, "*Layout*", sep = "/")
+  
+  props$arraylayoutfile <- Sys.glob(layoutDir)
+  
+  
   
   return (props)
 }

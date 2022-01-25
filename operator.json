@@ -8,23 +8,68 @@
   "properties": [
    {
     "kind": "DoubleProperty",
-    "name": "MinDiameter",
+    "name": "Min Diameter",
     "defaultValue":0.45,
     "description": ""
     },
     
     {
     "kind": "DoubleProperty",
-    "name": "SpotPitch",
+    "name": "Max Diameter",
+    "defaultValue":0.85,
+    "description": ""
+    },
+    
+    {
+    "kind": "DoubleProperty",
+    "name": "Saturation Limit",
+    "defaultValue":4095,
+    "description": ""
+    },
+    
+    {
+    "kind": "DoubleProperty",
+    "name": "Spot Pitch",
     "defaultValue":21.5,
     "description": ""
     },
     
     {
     "kind": "DoubleProperty",
-    "name": "SpotSize",
+    "name": "EdgeSensitivityLow",
+    "defaultValue":0,
+    "description": ""
+    },
+    {
+    "kind": "DoubleProperty",
+    "name": "Edge Sensitivity",
+    "defaultValue": 0.05,
+    "description": ""
+    },
+    
+    {
+    "kind": "DoubleProperty",
+    "name": "Spot Size",
     "defaultValue":0.66,
     "description": ""
+    },
+    
+    {
+    "kind": "EnumeratedProperty",
+    "name": "Segmentation Method",
+    "defaultValue":"Edge",
+    "values":[
+      "Edge",
+      "Hough"
+    ],
+    "description": ""
+    },
+    
+    {
+    "kind": "StringProperty",
+    "name": "Rotation",
+    "defaultValue":"-2:0.25:2",
+    "description": "Template rotation range in the format min:step:max (eg. -2:0.25:2) or 0 to perform intensity based registration."
     }
   ]
 }
