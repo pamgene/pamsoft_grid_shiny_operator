@@ -13,7 +13,7 @@ library(tiff)
 
 
 
-# http://127.0.0.1:5402/admin/w/2e726ebfbecf78338faf09317803614c/ds/68175734-c4f0-41ce-b19b-8d6d80a6f37a
+# http://127.0.0.1:5402/admin/w/2e726ebfbecf78338faf09317803614c/ds/68175734-c4f0-41ce-b19b-8d6d80a6f37a/wa
 # options("tercen.workflowId"= "2e726ebfbecf78338faf09317803614c")
 # options("tercen.stepId"= "68175734-c4f0-41ce-b19b-8d6d80a6f37a")
 
@@ -897,10 +897,18 @@ get_operator_props <- function(ctx, imagesFolder){
       segEdgeSensitivity[2] <- as.numeric(prop$value)
     }
   }
-  
+  print(grdSpotPitch)
+  print(grdSpotPitch)
   if( grdSpotPitch == 0 ){
-    
+    img_type <- get_imageset_type(imagesFolder)
+    switch (img_type,
+            "evolve3" = {grdSpotPitch<-17.0},
+            "evolve2" = {grdSpotPitch<-21.5},
+            "none"={stop("Cannot automatically detect Spot Pitch. Please set it to a value different than 0.")}
+    )
   }
+  
+  print(grdSpotPitch)
   
   props <- list()
   
@@ -940,22 +948,22 @@ get_operator_props <- function(ctx, imagesFolder){
   segMethod          <- "Edge"
   segEdgeSensitivity <- list(0, 0.05)
   isDiagnostic       <- TRUE
-  
+
   # Get the image width
   #Evolve2 -> Width 697
-  
+
   operatorProps <- ctx$query$operatorSettings$operatorRef$propertyValues
-  
+
   for( prop in operatorProps ){
-    
+
     if (prop$name == "Min Diameter"){
       sqcMinDiameter <- as.numeric(prop$value)
     }
-    
+
     if (prop$name == "Max Diameter"){
       sqcMaxDiameter <- as.numeric(prop$value)
     }
-    
+
     if (prop$name == "Rotation"){
       if(prop$value == "0"){
         grdRotation <- as.numeric(prop$value)
@@ -964,36 +972,48 @@ get_operator_props <- function(ctx, imagesFolder){
         grdRotation <- seq(prts[1], prts[3], by=prts[2])
       }
     }
-    
+
     if (prop$name == "Saturation Limit"){
       qntSaturationLimit <- as.numeric(prop$value)
     }
-    
+
     if (prop$name == "Spot Pitch"){
       grdSpotPitch <- as.numeric(prop$value)
     }
-    
+
     if (prop$name == "Spot Size"){
       grdSpotSize <- as.numeric(prop$value)
     }
-    
+
     if (prop$name == "Diagnostic Output"){
       if( prop$value == "Yes" ){
         isDiagnostic <- TRUE
       }else{
         isDiagnostic <- FALSE
       }
-      
+
     }
-    
+
     if (prop$name == "Edge Sensitivity"){
       segEdgeSensitivity[2] <- as.numeric(prop$value)
     }
   }
+
+  print(grdSpotPitch)
   
+  if( grdSpotPitch == 0 ){
+    img_type <- get_imageset_type(imagesFolder)
+    switch (img_type,
+            "evolve3" = {grdSpotPitch<-17.0},
+            "evolve2" = {grdSpotPitch<-21.5},
+            "none"={stop("Cannot automatically detect Spot Pitch. Please set it to a value different than 0.")}
+    )
+  }
+  
+  print(grdSpotPitch)
   
   props <- list()
-  
+
   props$sqcMinDiameter <- sqcMinDiameter
   props$sqcMaxDiameter <- sqcMaxDiameter
   props$grdSpotPitch <- grdSpotPitch
@@ -1003,23 +1023,42 @@ get_operator_props <- function(ctx, imagesFolder){
   props$segEdgeSensitivity <- segEdgeSensitivity
   props$segMethod <- segMethod
   props$isDiagnostic <- isDiagnostic
-  
+
   # Get array layout
   layoutDirParts <- str_split_fixed(imagesFolder, "/", Inf)
   nParts  <- length(layoutDirParts) -1 # Layout is in parent folder
-  
+
   layoutDir = ''
-  
+
   for( i in 1:nParts){
     layoutDir <- paste(layoutDir, layoutDirParts[i], sep = "/")
   }
   layoutDir <- paste(layoutDir, "*Layout*", sep = "/")
-  
+
   props$arraylayoutfile <- Sys.glob(layoutDir)
-  
-  
-  
+
+
+
   return (props)
 }
 
 
+get_imageset_type <- function(imgPath){
+  exampleImage <- Sys.glob(paste(imgPath, "*tif", sep = "/"))[[1]]
+  
+  tiffHdr <- readTIFF(exampleImage, payload = FALSE)
+  
+  imgTypeTag <- "none"
+  
+  if( tiffHdr['width'] == 552 && tiffHdr['length'] == 413){
+    # Evolve3 Image Set
+    imgTypeTag <- "evolve3"
+  }
+  
+  if( tiffHdr['width'] == 697 && tiffHdr['length'] == 520){
+    # Evolve2 Image Set
+    imgTypeTag <- "evolve2"
+  }
+  
+  return(imgTypeTag)
+}

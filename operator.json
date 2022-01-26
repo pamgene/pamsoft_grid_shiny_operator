@@ -30,7 +30,7 @@
     {
     "kind": "DoubleProperty",
     "name": "Spot Pitch",
-    "defaultValue":21.5,
+    "defaultValue":0,
     "description": ""
     },
     
