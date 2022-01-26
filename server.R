@@ -436,7 +436,7 @@ shinyServer(function(input, output, session) {
 
     spotPitch <- props()$grdSpotPitch
     spotSize  <- props()$grdSpotSize
-
+    
     selection$image <- gridSpotList$imageList[[1]][gridSpotList$selectedImage]
     
     selectedImage   <- paste0( imgInfo()[1], '/', selection$image, '.', imgInfo()[2] )
@@ -446,95 +446,70 @@ shinyServer(function(input, output, session) {
     spotRow <- dfImg %>% filter(.ri == 0) %>% pull(spotRow)
     spotCol <- dfImg %>% filter(.ri == 0) %>% pull(spotCol)
 
-    spotsX <- list()
-    spotsY <- list()
-
-    tetrisSpotCenter.x <- 0
-    tetrisSpotCenter.y <- 0
-    stdSpotCenter.x    <- 0
-    stdSpotCenter.y    <- 0
-
-    nTetris <- 0
-    nStd    <- 0
-
-    for(i in seq_along(spotRow)){
-      spot.x <- abs(spotRow[i]) * spotPitch
-      spot.y <- abs(spotCol[i]) * spotPitch
-
-      spotsX <- append(spotsX, spot.x)
-      spotsY <- append(spotsY, spot.y)
-
-      if( spotRow[i] < 0 ){
-        tetrisSpotCenter.x <- tetrisSpotCenter.x + spot.x
-        tetrisSpotCenter.y <- tetrisSpotCenter.y + spot.y
-        nTetris <- nTetris + 1
-      }else{
-        stdSpotCenter.x <- stdSpotCenter.x + spot.x
-        stdSpotCenter.y <- stdSpotCenter.y + spot.y
-        nStd <- nStd + 1
-      }
-    }
-
-
-    tetrisSpotCenter.x <- tetrisSpotCenter.x / nTetris
-    tetrisSpotCenter.y <- tetrisSpotCenter.y / nTetris
-
-    stdSpotCenter.x <- stdSpotCenter.x / nStd
-    stdSpotCenter.y <- stdSpotCenter.y / nStd
-
-    diffCenter.x <- tetrisSpotCenter.x - stdSpotCenter.x
-    diffCenter.y <- tetrisSpotCenter.y - stdSpotCenter.y
-
-    spotCenter.x    <- 0
-    spotCenter.y    <- 0
-    nSpots <- 0
-
-    for(i in seq_along(spotRow)){
-      spot.x <- spotsX[[i]]
-      spot.y <- spotsY[[i]]
-
-      spot.x <- spot.x + diffCenter.x
-      spot.y <- spot.y + diffCenter.y
-
-      spotCenter.x <- spotCenter.x + spot.x
-      spotCenter.y <- spotCenter.y + spot.y
-
-      nSpots <- nSpots + 1
-      if( spotRow[i] > 0 ){
-        spotsX[i] <- spot.x
-        spotsY[i] <- spot.y
-      }
-    }
-
-    spotCenter.x <- spotCenter.x/nSpots
-    spotCenter.y <- spotCenter.y/nSpots
-
-
+    
     imgHdr <- suppressWarnings( tiff::readTIFF(selectedImage, payload=FALSE)  )
     # Note, image display is rotated
     imgHeight <- as.numeric(imgHdr$width )
     imgWidth <- as.numeric(imgHdr$length)
-
-
+    
     imCenter.x <- imgWidth/2
     imCenter.y <- imgHeight/2
-
-    # Center grid on image
-    diffCenter.x <- spotCenter.x - imCenter.x
-    diffCenter.y <- spotCenter.y - (imgHeight - imCenter.y)
-
-
-    for(i in seq_along(spotsY)){
-        spot.x <- spotsX[[i]]
-        spot.y <- spotsY[[i]]
-
-        spot.x <- spot.x - diffCenter.x
-        spot.y <- spot.y - diffCenter.y
-
-        spotsX[i] <- spot.x
-        spotsY[i] <- spot.y
+    
+    
+    # Matching matlab code
+    # Place REF spots
+    refIdx <- list()
+    stdIdx <- list()
+    
+    refI   <- 1
+    stdI   <- 1
+    for( i in seq_along(spotRow)){
+      if( spotRow[i] < 0 || spotCol[i] < 0){
+        refIdx[refI] <- i
+        refI <- refI + 1
+      }else{
+        stdIdx[stdI] <- i
+        stdI <- stdI + 1
+      }
     }
-
+    
+    nRef <- refI - 1
+    spotsX <- list()
+    spotsY <- list()
+    
+    for( i in 1:2 ){
+      if(i==1){
+        row <- abs(spotRow[unlist(refIdx)])
+        col <- abs(spotCol[unlist(refIdx)])  
+      }else{
+        row <- abs(spotRow[unlist(stdIdx)])
+        col <- abs(spotCol[unlist(stdIdx)])
+        
+      }
+      
+  
+      # calculate grid coordinates, zeros centered
+      rmp <- min(row) + (max(row)-min(row))/2
+      cmp <- min(col) + (max(col)-min(col))/2
+       
+      # Considering 0 offset
+      x = spotPitch*(row-rmp)
+      y = spotPitch*(col-cmp)
+      
+  
+      x = imCenter.x + x + 1
+      y = imCenter.y + y + 1
+      
+      off <- 0
+      if( i == 2){
+        off <- nRef
+      }
+      for(i in seq_along(x)){
+        spotsX[i+off] <- x[i]
+        spotsY[i+off] <- y[i]
+      }
+    }
+    
 
     off <- (spotPitch * spotSize)/2
 
@@ -846,98 +821,6 @@ prep_image_folder <- function(session, docId){
 }
 
 
-#TODO Update properties to match grid operator
-# -- If spotPitch is 0, defined it based on image width (either 21.5 or 17.7)
-get_operator_props <- function(ctx, imagesFolder){
-  sqcMinDiameter     <- 0.45
-  sqcMaxDiameter     <- 0.85
-  grdSpotPitch       <- 0
-  grdSpotSize        <- 0.66
-  grdRotation        <- seq(-2, 2, by=0.25)
-  qntSaturationLimit <- 4095
-  segMethod          <- "Edge"
-  segEdgeSensitivity <- list(0, 0.05)
-  
-  operatorProps <- ctx$query$operatorSettings$operatorRef$propertyValues
-  
-  for( prop in operatorProps ){
-    
-    if (prop$name == "Min Diameter"){
-      sqcMinDiameter <- as.numeric(prop$value)
-    }
-    
-    if (prop$name == "Max Diameter"){
-      sqcMaxDiameter <- as.numeric(prop$value)
-    }
-    
-    if (prop$name == "Rotation"){
-      
-      if(prop$value == "0"){
-        grdRotation <- as.numeric(prop$value)
-      }else{
-        prts <- as.numeric(unlist(str_split(prop$value, ":")))
-        grdRotation <- seq(prts[1], prts[3], by=prts[2])
-      }
-    }
-    
-    
-    if (prop$name == "Saturation Limit"){
-      qntSaturationLimit <- as.numeric(prop$value)
-    }
-    
-    if (prop$name == "Spot Pitch"){
-      grdSpotPitch <- as.numeric(prop$value)
-    }
-    
-    if (prop$name == "Spot Size"){
-      grdSpotSize <- as.numeric(prop$value)
-    }
-    
-    if (prop$name == "Edge Sensitivity"){
-      segEdgeSensitivity[2] <- as.numeric(prop$value)
-    }
-  }
-  print(grdSpotPitch)
-  print(grdSpotPitch)
-  if( grdSpotPitch == 0 ){
-    img_type <- get_imageset_type(imagesFolder)
-    switch (img_type,
-            "evolve3" = {grdSpotPitch<-17.0},
-            "evolve2" = {grdSpotPitch<-21.5},
-            "none"={stop("Cannot automatically detect Spot Pitch. Please set it to a value different than 0.")}
-    )
-  }
-  
-  print(grdSpotPitch)
-  
-  props <- list()
-  
-  props$sqcMinDiameter <- sqcMinDiameter
-  props$sqcMaxDiameter <- sqcMaxDiameter
-  props$grdSpotPitch <- grdSpotPitch
-  props$grdSpotSize <- grdSpotSize
-  props$grdRotation <- grdRotation
-  props$qntSaturationLimit <- qntSaturationLimit
-  props$segEdgeSensitivity <- segEdgeSensitivity
-  props$segMethod <- segMethod
-  
-  
-  # Get array layout
-  layoutDirParts <- str_split_fixed(imagesFolder, "/", Inf)
-  nParts  <- length(layoutDirParts) -1 # Layout is in parent folder
-  
-  layoutDir = ''
-  
-  for( i in 1:nParts){
-    layoutDir <- paste(layoutDir, layoutDirParts[i], sep = "/")
-  }
-  layoutDir <- paste(layoutDir, "*Layout*", sep = "/")
-  
-  props$arraylayoutfile <- Sys.glob(layoutDir)
-}
-
-
-
 get_operator_props <- function(ctx, imagesFolder){
   sqcMinDiameter     <- 0.45
   sqcMaxDiameter     <- 0.85
@@ -999,8 +882,7 @@ get_operator_props <- function(ctx, imagesFolder){
     }
   }
 
-  print(grdSpotPitch)
-  
+
   if( grdSpotPitch == 0 ){
     img_type <- get_imageset_type(imagesFolder)
     switch (img_type,
@@ -1009,8 +891,6 @@ get_operator_props <- function(ctx, imagesFolder){
             "none"={stop("Cannot automatically detect Spot Pitch. Please set it to a value different than 0.")}
     )
   }
-  
-  print(grdSpotPitch)
   
   props <- list()
 
@@ -1044,6 +924,10 @@ get_operator_props <- function(ctx, imagesFolder){
 
 
 get_imageset_type <- function(imgPath){
+  defaultW <- getOption("warn")
+  options(warn = -1)
+  
+  
   exampleImage <- Sys.glob(paste(imgPath, "*tif", sep = "/"))[[1]]
   
   tiffHdr <- readTIFF(exampleImage, payload = FALSE)
@@ -1059,6 +943,6 @@ get_imageset_type <- function(imgPath){
     # Evolve2 Image Set
     imgTypeTag <- "evolve2"
   }
-  
+  options(warn = defaultW)
   return(imgTypeTag)
 }
