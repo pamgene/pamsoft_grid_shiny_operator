@@ -21,6 +21,11 @@ library(tiff)
 # options("tercen.workflowId"= "0e50e15f59bd106500e86d380d006da2")
 # options("tercen.stepId"= "0bfa3f6e-62ad-4b05-86fa-9f86b5c15bba")
 
+# http://127.0.0.1:5402/admin/w/2e726ebfbecf78338faf09317803614c/ds/68175734-c4f0-41ce-b19b-8d6d80a6f37a
+# options("tercen.workflowId"= "2e726ebfbecf78338faf09317803614c")
+# options("tercen.stepId"= "68175734-c4f0-41ce-b19b-8d6d80a6f37a")
+
+
 ############################################
 #### This part should not be modified
 getCtx <- function(session) {
@@ -413,9 +418,9 @@ shinyServer(function(input, output, session) {
   })
 
   output$images <- DT::renderDT( {
-    
+      
       DT::datatable( data=gridSpotList$imageList,
-                  rownames = unlist(append( list("G"), rep("I", nrow(gridSpotList$imageList)-1)   )), 
+                 rownames = unlist(append( list("G"), rep("I", nrow(gridSpotList$imageList)-1)   )), 
                  selection='none', 
                  colnames="", filter="none", style="bootstrap4",
                  options = list(pageLength=15, pageLengthLsit=c(5,15,30),
@@ -648,25 +653,27 @@ remove_variable_ns <- function(varName){
 
 get_image_list <- function(df, imageUsed){
   req(df)
-  
+
   values <- df %>% select(c("Image", "grdImageNameUsed")) %>%
             filter(grdImageNameUsed == imageUsed) %>%
             pull(Image) %>% unique() %>% as.data.frame() 
+
+  # Adjust based on image grid
+  if( nrow(values) > 1){
+    gridImgIdx <- which(values == imageUsed)
+    values <- values$.[- gridImgIdx]
+    
   
-  gridImgIdx <- which(values == imageUsed)
-  
-  values <- values$.[- gridImgIdx]
-  
-  # Sort the list
-  sortVals <- sort(unlist(as.list(lapply( values, function(x){
-    factors <- str_split(x, '[_]', Inf)
-    cyc <- factors[[1]][5]
-    cyc <- as.numeric(substr(cyc, 2, 100))
-    return(cyc)
-  }))), decreasing = TRUE, index.return = TRUE)
-  
-  values <- append(as.list(imageUsed), as.list(values[unlist(sortVals[2])]) )
-  
+    # Sort the list
+    sortVals <- sort(unlist(as.list(lapply( values, function(x){
+      factors <- str_split(x, '[_]', Inf)
+      cyc <- factors[[1]][5]
+      cyc <- as.numeric(substr(cyc, 2, 100))
+      return(cyc)
+    }))), decreasing = TRUE, index.return = TRUE)
+    
+    values <- append(as.list(imageUsed), as.list(values[unlist(sortVals[2])]) )
+  }
   
   outDf <- do.call(rbind.data.frame, values)
   colnames(outDf) <- c('.')
