@@ -17,6 +17,9 @@ library(tiff)
 # options("tercen.workflowId"= "2e726ebfbecf78338faf09317803614c")
 # options("tercen.stepId"= "68175734-c4f0-41ce-b19b-8d6d80a6f37a")
 
+#http://127.0.0.1:5402/admin/w/0e50e15f59bd106500e86d380d006da2/ds/0bfa3f6e-62ad-4b05-86fa-9f86b5c15bba
+# options("tercen.workflowId"= "0e50e15f59bd106500e86d380d006da2")
+# options("tercen.stepId"= "0bfa3f6e-62ad-4b05-86fa-9f86b5c15bba")
 
 ############################################
 #### This part should not be modified
@@ -592,6 +595,10 @@ shinyServer(function(input, output, session) {
           idxR <- which(df$data$variable == "diameter")
           idxM <- which(df$data$variable == "manual")
           idxC <- which(df$data$variable == "gridY" )
+          
+          idxB <- which(df$data$variable == "bad")
+          idxE <- which(df$data$variable == "empty")
+          idxO <- which(df$data$variable == "grdRotation")
 
      
           outDf <- data.frame(
@@ -602,6 +609,9 @@ shinyServer(function(input, output, session) {
             grdYFixedPosition=df$data$.y[ idxFY  ],
             diameter=df$data$.y[ idxR  ],
             manual=df$data$.y[ idxM  ],
+            bad=df$data$.y[ idxB  ],
+            empty=df$data$.y[ idxE  ],
+            grdRotation=df$data$.y[ idxO  ],
             grdImageNameUsed=df$data$grdImageNameUsed[idxX], 
             Image=df$data$Image[idxX]  )
 
