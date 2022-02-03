@@ -32,6 +32,7 @@ $(document).on('shiny:value', function(evt) {
       customMessageHandler(grid)
     }, 0);
   }
+
 });
 "
 
@@ -176,11 +177,12 @@ shinyUI(
                   var gridImage = document.getElementById('gridImage');
                   var canvas = document.getElementById('gridCanvas');
               
-                  canvas.width = 697
-                  canvas.height = 520
+
+                  canvas.width = gridImage.naturalWidth
+                  canvas.height = gridImage.naturalHeight
               
-                  var ctx = canvas.getContext('2d');
                   
+                  var ctx = canvas.getContext('2d');
 
           
               
@@ -363,9 +365,8 @@ ctx.fillStyle = '#00AA00';
                    ),
       mainPanel(
         
-        # 
-        fluidRow( column(8, tags$canvas(id="gridCanvas", style="background-color: white") ),
-                        style = "height:620px; "),
+         
+        fluidRow( column(8, tags$canvas(id="gridCanvas", style="background-color: white") )),
         
         
         fluidRow( column(4, sliderInput("brightness", "Brightness",
