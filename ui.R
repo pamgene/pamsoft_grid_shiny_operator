@@ -45,6 +45,14 @@ shinyUI(
     shinyjs::useShinyjs(),
     
     tags$script(HTML(js)),
+    tags$style(HTML(".btn.disabled {
+        background-color: #aaaaaa;
+      }
+      .runBtn{
+        background-color: #66ff66;
+        border-color: #008800;
+      }
+                    ")),
     tags$head(HTML("<script type='text/javascript'>
                   
                   function componentToHex(c) {
@@ -366,7 +374,7 @@ ctx.fillStyle = '#00AA00';
       mainPanel(
         
          
-        fluidRow( column(8, tags$canvas(id="gridCanvas", style="background-color: white") )),
+        fluidRow( column(8, tags$canvas(id="gridCanvas", style="background-color: white"), align="center" )),
         
         
         fluidRow( column(4, sliderInput("brightness", "Brightness",
@@ -378,12 +386,13 @@ ctx.fillStyle = '#00AA00';
                                         value = 1, step = 0.05))
                   ),
         fluidRow(  
-                  column(2, 
-                         tags$div(title="Save all grid position changes", 
-                                  disabled(actionButton("runBtn", label = "Run", width="120px"  )))),
+          column(4),
                   column(2, 
                          tags$div(title="Create a new grid for the current image", 
-                                  disabled(actionButton("gridBtn", label = "New Grid", width="120px"  ))))
+                                  disabled(actionButton("gridBtn", label = "New Grid", width="120px"  )))), 
+                  column(2, 
+                         tags$div(title="Save all grid position changes", 
+                                  disabled(actionButton("runBtn", label = "Run", width="120px", class="runBtn" ))))
                   ),
         fluidRow( column(8, imageOutput(outputId = "selectedImage")   ,  
                          style = "height:5px; visibility:hidden") ),
