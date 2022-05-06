@@ -13,17 +13,17 @@ library(tiff)
 
 
 
-# http://127.0.0.1:5402/admin/w/2e726ebfbecf78338faf09317803614c/ds/68175734-c4f0-41ce-b19b-8d6d80a6f37a/wa
-# options("tercen.workflowId"= "2e726ebfbecf78338faf09317803614c")
-# options("tercen.stepId"= "68175734-c4f0-41ce-b19b-8d6d80a6f37a")
+# http://127.0.0.1:5402/test-team/w/cc41c236da58dcb568c6fe1a320140d2/ds/b8702800-a545-40dd-853c-0c66ca701c80
+# options("tercen.workflowId"= "cc41c236da58dcb568c6fe1a320140d2")
+# options("tercen.stepId"= "b8702800-a545-40dd-853c-0c66ca701c80")
 
 #http://127.0.0.1:5402/admin/w/0e50e15f59bd106500e86d380d006da2/ds/0bfa3f6e-62ad-4b05-86fa-9f86b5c15bba
 # options("tercen.workflowId"= "0e50e15f59bd106500e86d380d006da2")
 # options("tercen.stepId"= "0bfa3f6e-62ad-4b05-86fa-9f86b5c15bba")
 
-# http://127.0.0.1:5402/admin/w/2e726ebfbecf78338faf09317803614c/ds/68175734-c4f0-41ce-b19b-8d6d80a6f37a
-# options("tercen.workflowId"= "2e726ebfbecf78338faf09317803614c")
-# options("tercen.stepId"= "68175734-c4f0-41ce-b19b-8d6d80a6f37a")
+# http://127.0.0.1:5402/admin/w/0e50e15f59bd106500e86d380d006da2/ds/5ed7851d-eba3-4312-a799-1b53dc000ed8/wa
+#options("tercen.workflowId"= "0e50e15f59bd106500e86d380d006da2")
+#options("tercen.stepId"= "5ed7851d-eba3-4312-a799-1b53dc000ed8")
 
 
 ############################################
@@ -418,25 +418,26 @@ shinyServer(function(input, output, session) {
   })
 
   output$images <- DT::renderDT( {
-      
-      DT::datatable( data=gridSpotList$imageList,
-                 rownames = unlist(append( list("G"), rep("I", nrow(gridSpotList$imageList)-1)   )), 
-                 selection='none', 
-                 colnames="", filter="none", style="bootstrap4",
-                 options = list(pageLength=15, pageLengthLsit=c(5,15,30),
-                                processing=FALSE, searching=FALSE ),
-                 extensions=c("Select"),
-                 callback=JS("
-                              $('#images').find('table').DataTable().row(0).select();
-                              
-                              table.on('click.dt', 'tr', function(e, dt, type, indexes) {
-                              var row = $(this).index()+1;
-
-                              Shiny.setInputValue('selectedImageRow', row);
-                          })")
-                 ) 
-
+      if (!is.null(gridSpotList$imageList)){ # Wait for the imageList to load
+        DT::datatable( data=gridSpotList$imageList,
+                   rownames = unlist(append( list("G"), rep("I", nrow(gridSpotList$imageList)-1)   )), 
+                   selection='none', 
+                   colnames="", filter="none", style="bootstrap4",
+                   options = list(pageLength=15, pageLengthLsit=c(5,15,30),
+                                  processing=FALSE, searching=FALSE ),
+                   extensions=c("Select"),
+                   callback=JS("
+                                $('#images').find('table').DataTable().row(0).select();
+                                
+                                table.on('click.dt', 'tr', function(e, dt, type, indexes) {
+                                var row = $(this).index()+1;
+  
+                                Shiny.setInputValue('selectedImageRow', row);
+                            })")
+                   ) 
+      }
     }, server = FALSE)
+  
 
 
   observeEvent( input$gridBtn, {
@@ -653,6 +654,7 @@ remove_variable_ns <- function(varName){
 
 get_image_list <- function(df, imageUsed){
   req(df)
+  req(imageUsed)
 
   values <- df %>% select(c("Image", "grdImageNameUsed")) %>%
             filter(grdImageNameUsed == imageUsed) %>%
@@ -702,14 +704,6 @@ get_image_used_list <- function( session ){
  return(values[[1]])
 }
 
-
-# get_image_used_list <- function( dfData ){
-# 
-#   values <- dfData %>% select("grdImageNameUsed") %>% unique() %>% as.list()
-#   
-#   return(values[[1]])
-# }
-# 
 
 get_document_id <- function( session ){
   
