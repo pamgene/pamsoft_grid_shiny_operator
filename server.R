@@ -18,8 +18,8 @@ library(stringi)
 
 
 # http://127.0.0.1:5402/test-team/w/cc41c236da58dcb568c6fe1a320140d2/ds/b8702800-a545-40dd-853c-0c66ca701c80
-options("tercen.workflowId"= "cc41c236da58dcb568c6fe1a320140d2")
-options("tercen.stepId"= "b8702800-a545-40dd-853c-0c66ca701c80")
+# options("tercen.workflowId"= "cc41c236da58dcb568c6fe1a320140d2")
+# options("tercen.stepId"= "b8702800-a545-40dd-853c-0c66ca701c80")
 
 #http://127.0.0.1:5402/admin/w/0e50e15f59bd106500e86d380d006da2/ds/0bfa3f6e-62ad-4b05-86fa-9f86b5c15bba
 # options("tercen.workflowId"= "0e50e15f59bd106500e86d380d006da2")
