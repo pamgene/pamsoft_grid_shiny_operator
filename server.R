@@ -11,11 +11,13 @@ library(DT)
 library(stringr)
 library(tiff)
 
+library(tim)
+library(tools)
 
 
 # http://127.0.0.1:5402/test-team/w/cc41c236da58dcb568c6fe1a320140d2/ds/b8702800-a545-40dd-853c-0c66ca701c80
-# options("tercen.workflowId"= "cc41c236da58dcb568c6fe1a320140d2")
-# options("tercen.stepId"= "b8702800-a545-40dd-853c-0c66ca701c80")
+options("tercen.workflowId"= "cc41c236da58dcb568c6fe1a320140d2")
+options("tercen.stepId"= "b8702800-a545-40dd-853c-0c66ca701c80")
 
 #http://127.0.0.1:5402/admin/w/0e50e15f59bd106500e86d380d006da2/ds/0bfa3f6e-62ad-4b05-86fa-9f86b5c15bba
 # options("tercen.workflowId"= "0e50e15f59bd106500e86d380d006da2")
@@ -790,40 +792,15 @@ prep_image_folder <- function(session, docId){
   
   progress$set(message="Downloading images")
   
-  
   ctx <- getCtx(session)
+  show_modal_spinner(spin="fading-circle", text = "Loading data")
+  f.names <- tim::load_data(ctx, docId) 
+  f.names <- grep('*/ImageResults/*', f.names, value = TRUE )
   
+  imageResultsPath <- dirname(f.names[1])
   
-  #1. extract files
-  doc   <- ctx$client$fileService$get(docId )
-  filename <- tempfile()
-  writeBin(ctx$client$fileService$download(docId), filename)
-  
-  show_modal_spinner(spin="fading-circle", text = "Loading data (70%)")
-  
-  on.exit(unlink(filename, recursive = TRUE, force = TRUE))
-  
-  image_list <- vector(mode="list", length=length(grep(".zip", doc$name)) )
-  
-  # unzip archive (which presumably exists at this point)
-  tmpdir <- tempfile()
-  unzip(filename, exdir = tmpdir)
-  show_modal_spinner(spin="fading-circle", text = "Loading data (90%)")
-  
-  imageResultsPath <- file.path(list.files(tmpdir, full.names = TRUE), "ImageResults")
-  
-  
-  f.names <- list.files(imageResultsPath, full.names = TRUE)
+  fext <- file_ext(f.names[1])
 
-  
-  
-  
-  fdir <- str_split_fixed(f.names[1], "/", Inf)
-  fdir <- fdir[length(fdir)]
-  
-  fname <- str_split(fdir, '[.]', Inf)
-  fext <- fname[[1]][2]
-  
   progress$close()
   
   # Images for all series will be here
