@@ -14,6 +14,8 @@ library(tiff)
 library(tim)
 library(tools)
 
+library(stringi)
+
 
 # http://127.0.0.1:5402/test-team/w/cc41c236da58dcb568c6fe1a320140d2/ds/b8702800-a545-40dd-853c-0c66ca701c80
 options("tercen.workflowId"= "cc41c236da58dcb568c6fe1a320140d2")
@@ -646,13 +648,6 @@ shinyServer(function(input, output, session) {
 })
 
 
-remove_variable_ns <- function(varName){
-  fname <- str_split(varName, '[.]', Inf)
-  fext <- fname[[1]][2]
-  
-  return(fext)
-}
-
 
 get_image_list <- function(df, imageUsed){
   req(df)
@@ -726,7 +721,7 @@ get_data <- function( session ){
   ctx <- getCtx(session)
   progress <- Progress$new(session, min=1, max=1)
   progress$set(message="Loading Table Data")
-  
+  show_modal_spinner(spin="fading-circle", text = "Loading data")
   
   required.cnames = c("documentId","grdImageNameUsed","Image","spotRow","spotCol","ID")
   required.rnames = c("variable")
@@ -740,7 +735,6 @@ get_data <- function( session ){
       endsWith(cname.with.ns, required.cname)
     }, cnames.with.ns, nomatch=required.cname)
   })
-  
   required.rnames.with.ns = lapply(required.rnames, function(required.rname){
     Find(function(rname.with.ns){
       endsWith(rname.with.ns, required.rname)
@@ -749,6 +743,7 @@ get_data <- function( session ){
   
   cTable <- ctx$cselect(required.cnames.with.ns)
   rTable <- ctx$rselect(required.rnames.with.ns)
+
   
   # override the names
   names(cTable) = required.cnames
@@ -757,30 +752,21 @@ get_data <- function( session ){
 
   qtTable <- ctx$select(c(".ci", ".ri", ".y"))
   cTable[[".ci"]] = seq(0, nrow(cTable)-1)
-  
-  qtTable = dplyr::left_join(qtTable,cTable,by=".ci")
-  
   rTable[[".ri"]] = seq(0, nrow(rTable)-1)
   
-  
-
-  qtTable = dplyr::left_join(qtTable,rTable,by=".ri")
-  
+  qtTable <- dplyr::left_join(qtTable,cTable,by=".ci")
+  qtTable <- dplyr::left_join(qtTable,rTable,by=".ri")
 
 
-  
-  
-  show_modal_spinner(spin="fading-circle", text = "Loading data (0%)")
-  qtTable$variable = sapply(qtTable$variable, remove_variable_ns)
-  
+  qtTable$variable <- stri_split_fixed(qtTable$variable, ".", 2, simplify = TRUE)[,2]
+
   # Fix the position to avoid re-running segmentation position refinement  
   qtTable$.y[ qtTable$variable == 'grdXFixedPosition' ] = qtTable$.y[ qtTable$variable == 'gridX' ]
   qtTable$.y[ qtTable$variable == 'grdYFixedPosition' ] = qtTable$.y[ qtTable$variable == 'gridY' ]
   
   progress$close()
   
-  show_modal_spinner(spin="fading-circle", text = "Loading data (50%)")
-  
+
   return(qtTable)
   
 }
