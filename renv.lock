@@ -485,10 +485,10 @@
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "tim",
-      "RemoteUsername": "tsmonteiro",
+      "RemoteUsername": "tercen",
       "RemoteRef": "0.0.8",
-      "RemoteSha": "8bf7c5daec5847524259dc001006cca667eef356",
-      "Hash": "66206b07b2e9dac8138b6de74ebab797"
+      "RemoteSha": "ef0b6777c014ae6125dada2b6636cd2655960345",
+      "Hash": "fec567551812e346fb592d0861006738"
     },
     "utf8": {
       "Package": "utf8",
