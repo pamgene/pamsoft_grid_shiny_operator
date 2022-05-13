@@ -21,13 +21,13 @@ library(stringi)
 # options("tercen.workflowId"= "cc41c236da58dcb568c6fe1a320140d2")
 # options("tercen.stepId"= "b8702800-a545-40dd-853c-0c66ca701c80")
 
-#http://127.0.0.1:5402/admin/w/0e50e15f59bd106500e86d380d006da2/ds/0bfa3f6e-62ad-4b05-86fa-9f86b5c15bba
-# options("tercen.workflowId"= "0e50e15f59bd106500e86d380d006da2")
-# options("tercen.stepId"= "0bfa3f6e-62ad-4b05-86fa-9f86b5c15bba")
+# http://127.0.0.1:5402/test-team/w/8ef9012b2d2f050214e16189ba0406b4/ds/a73a2842-ff0a-4db3-8f7e-cd5ce72bdb67
+# options("tercen.workflowId"= "8ef9012b2d2f050214e16189ba0406b4")
+# options("tercen.stepId"= "a73a2842-ff0a-4db3-8f7e-cd5ce72bdb67")
 
-# http://127.0.0.1:5402/admin/w/0e50e15f59bd106500e86d380d006da2/ds/5ed7851d-eba3-4312-a799-1b53dc000ed8/wa
-#options("tercen.workflowId"= "0e50e15f59bd106500e86d380d006da2")
-#options("tercen.stepId"= "5ed7851d-eba3-4312-a799-1b53dc000ed8")
+# http://127.0.0.1:5402/test-team/w/8ef9012b2d2f050214e16189ba0406b4/ds/032404ca-b2af-4f67-8806-6bd0ffa8fff5
+# options("tercen.workflowId"= "8ef9012b2d2f050214e16189ba0406b4")
+# options("tercen.stepId"= "032404ca-b2af-4f67-8806-6bd0ffa8fff5")
 
 
 ############################################
@@ -64,8 +64,8 @@ shinyServer(function(input, output, session) {
 
   mode      <- reactive({getMode(session)})
   
-  docId   <- reactive( get_document_id( session )  )
-  imgInfo <- reactive(prep_image_folder(session, docId)  )
+  docIdCols   <- reactive( get_document_id_cols( session )  )
+  imgInfo <- reactive(prep_image_folder(session, docIdCols)  )
   
   imgDir <- tempdir(check=TRUE)
   # END OF SERVER VARIABLES DEFINITION
@@ -702,12 +702,20 @@ get_image_used_list <- function( session ){
 }
 
 
-get_document_id <- function( session ){
+get_document_id_cols <- function( session ){
   
   ctx <- getCtx(session)
-  values <- ctx %>% cselect("documentId") %>% unique() %>% as.list()
+  #values <- ctx %>% cselect("documentId") %>% unique() %>% as.list()
   
-  return(values[[1]][1])
+  
+  colNames <- ctx$cnames %>% as.list()
+  
+  # Checking for documentId columns
+  docIdCols <- unname(unlist(colNames[unlist(lapply(colNames, function(x){
+    return(grepl("documentId", x, fixed = TRUE))
+  } ))]))
+
+  return(docIdCols)
 }
 
 getMode = function(session){
@@ -718,12 +726,22 @@ getMode = function(session){
 
 
 get_data <- function( session ){
+  
   ctx <- getCtx(session)
   progress <- Progress$new(session, min=1, max=1)
   progress$set(message="Loading Table Data")
   show_modal_spinner(spin="fading-circle", text = "Loading data")
+
+  # documetnId column may have the prefix, as it is now possible to have multiple documetn columns  
+  colNames <- ctx$cnames %>% as.list()
   
-  required.cnames = c("documentId","grdImageNameUsed","Image","spotRow","spotCol","ID")
+  # Checking for documentId columns
+  docIdCols <- unname(unlist(colNames[unlist(lapply(colNames, function(x){
+    return(grepl("documentId", x, fixed = TRUE))
+  } ))]))
+  
+
+  required.cnames = append( docIdCols, c("grdImageNameUsed","Image","spotRow","spotCol","ID") )
   required.rnames = c("variable")
   
   cnames.with.ns = ctx$cnames
@@ -740,11 +758,10 @@ get_data <- function( session ){
       endsWith(rname.with.ns, required.rname)
     }, rnames.with.ns, nomatch=required.rname)
   })
-  
+
   cTable <- ctx$cselect(required.cnames.with.ns)
   rTable <- ctx$rselect(required.rnames.with.ns)
 
-  
   # override the names
   names(cTable) = required.cnames
   names(rTable) = required.rnames
@@ -766,13 +783,13 @@ get_data <- function( session ){
   
   progress$close()
   
-
   return(qtTable)
   
 }
 
-prep_image_folder <- function(session, docId){
-  docId <- docId()
+
+prep_image_folder <- function(session, docIdCols){
+  docIdCols <- docIdCols()
   progress <- Progress$new(session, min=1, max=1)
   
   
@@ -780,17 +797,48 @@ prep_image_folder <- function(session, docId){
   
   ctx <- getCtx(session)
   show_modal_spinner(spin="fading-circle", text = "Loading data")
-  f.names <- tim::load_data(ctx, docId) 
-  f.names <- grep('*/ImageResults/*', f.names, value = TRUE )
   
-  imageResultsPath <- dirname(f.names[1])
-  
-  fext <- file_ext(f.names[1])
+
+  if(length(docIdCols) == 1){
+    docIds <- ctx$cselect(docIdCols)
+
+    f.names <- tim::load_data(ctx, unique(unlist(docIds[1])) )
+    f.names <- grep('*/ImageResults/*', f.names, value = TRUE )
+
+    imageResultsPath <- dirname(f.names[1])
+    layoutDir <- dirname(imageResultsPath)
+    fext <- file_ext(f.names[1])
+    res <- (list(imageResultsPath, fext, layoutDir))
+  }else{
+    docIds <- ctx$cselect(docIdCols)
+
+    f.names.a <- tim::load_data(ctx, unique(unlist(docIds[1])) )
+    f.names.b <- tim::load_data(ctx, unique(unlist(docIds[2])))
+
+    f.names <- grep('*/ImageResults/*', f.names.a, value = TRUE )
+    a.names <- f.names.b
+
+    if(length(f.names) == 0 ){
+      f.names <- grep('*/ImageResults/*', f.names.b, value = TRUE )
+      a.names <- f.names.a
+    }
+
+    if(length(f.names) == 0 ){
+      stop("No ImageResults/ path found within provided files.")
+    }
+
+    imageResultsPath <- dirname(f.names[1])
+
+    fext <- file_ext(f.names[1])
+    layoutDir <- dirname(a.names[1])
+
+    res <- list(imageResultsPath, fext, layoutDir)
+  }
 
   progress$close()
   
   # Images for all series will be here
-  return(list(imageResultsPath, fext))
+  return(res)
   
 }
 
