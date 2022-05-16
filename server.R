@@ -726,13 +726,13 @@ getMode = function(session){
 
 
 get_data <- function( session ){
-  
   ctx <- getCtx(session)
   progress <- Progress$new(session, min=1, max=1)
   progress$set(message="Loading Table Data")
+  
   show_modal_spinner(spin="fading-circle", text = "Loading data")
 
-  # documetnId column may have the prefix, as it is now possible to have multiple documetn columns  
+  # documetnId column may have the prefix, as it is now possible to have multiple document columns  
   colNames <- ctx$cnames %>% as.list()
   
   # Checking for documentId columns
@@ -826,7 +826,8 @@ prep_image_folder <- function(session, docIdCols){
     }
 
     if(length(f.names) == 0 ){
-      stop("No 'ImageResults/' path found within provided files.")
+      progress$set(paste0("No 'ImageResults/' path found within provided files. ",
+                          length(f.names)    ) )
     }
 
     imageResultsPath <- dirname(f.names[1])
