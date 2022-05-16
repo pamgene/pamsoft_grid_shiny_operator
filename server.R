@@ -830,12 +830,16 @@ prep_image_folder <- function(session, docIdCols){
     if(length(f.names) == 0 ){
       progress$set(message="No 'ImageResults/' path found within provided files.")
       
-      progress$set(message=paste0(unique(unlist(docIds[1])),
+      progress$set(message=paste0(f.names.a,
                                   '  -  ',
-                                  unique(unlist(docIds[2]))))
+                                  f.names.b))
+      
+      
+      stop("No images found")
 
     }
-
+    
+    
     imageResultsPath <- dirname(f.names[1])
     fext <- file_ext(f.names[1])
     layoutDir <- dirname(a.names[1])
