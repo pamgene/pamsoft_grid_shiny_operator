@@ -814,7 +814,7 @@ prep_image_folder <- function(session, docIdCols){
   }else{
     docIds <- ctx$cselect(docIdCols)
 
-    f.names.a <- tim::load_data(ctx, unique(unlist(docIds[1]))[1] )
+    f.names.a <- tim::load_data(ctx, unique(unlist(docIds[1])), force_load=TRUE)
     f.names.b <- tim::load_data(ctx, unique(unlist(docIds[2])) )
 
     f.names <- grep('*/ImageResults/*', f.names.a, value = TRUE )
