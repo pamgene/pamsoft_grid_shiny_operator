@@ -21,14 +21,6 @@ library(stringi)
 # options("tercen.workflowId"= "8ef9012b2d2f050214e16189ba0406b4")
 # options("tercen.stepId"= "032404ca-b2af-4f67-8806-6bd0ffa8fff5")
 
-# http://127.0.0.1:5402/test-team/w/8ef9012b2d2f050214e16189ba0406b4/ds/a73a2842-ff0a-4db3-8f7e-cd5ce72bdb67
-# options("tercen.workflowId"= "8ef9012b2d2f050214e16189ba0406b4")
-# options("tercen.stepId"= "a73a2842-ff0a-4db3-8f7e-cd5ce72bdb67")
-
-# http://127.0.0.1:5402/test-team/w/8ef9012b2d2f050214e16189ba0406b4/ds/032404ca-b2af-4f67-8806-6bd0ffa8fff5
-# options("tercen.workflowId"= "8ef9012b2d2f050214e16189ba0406b4")
-# options("tercen.stepId"= "032404ca-b2af-4f67-8806-6bd0ffa8fff5")
-
 
 ############################################
 #### This part should not be modified
@@ -814,40 +806,28 @@ prep_image_folder <- function(session, docIdCols){
   }else{
     docIds <- ctx$cselect(docIdCols)
 
-    f.names.a <- tim::load_data(ctx, unique(unlist(docIds[1])), force_load=TRUE)
+    f.names.a <- tim::load_data(ctx, unique(unlist(docIds[1])) )
     f.names.b <- tim::load_data(ctx, unique(unlist(docIds[2])) )
 
     f.names <- grep('*/ImageResults/*', f.names.a, value = TRUE )
     a.names <- f.names.b
 
-    
-    progress$set(message=paste0( unique(unlist(docIds[1])), '  :  ', f.names.a )  )
-    stop('check')
+
     if(length(f.names) == 0 ){
       f.names <- grep('*/ImageResults/*', f.names.b, value = TRUE )
       a.names <- f.names.a
     }
 
     if(length(f.names) == 0 ){
-      progress$set(message="No 'ImageResults/' path found within provided files.")
-      
-      progress$set(message=paste0(f.names.a,
-                                  '  -  ',
-                                  f.names.b))
-      
-      
+      progress$set(message="ABORTING: No images found within provided files.")
       stop("No images found")
-
     }
-    
     
     imageResultsPath <- dirname(f.names[1])
     fext <- file_ext(f.names[1])
     layoutDir <- dirname(a.names[1])
 
     res <- (list(imageResultsPath, fext, layoutDir))
-    
-    
   }
 
   progress$close()
