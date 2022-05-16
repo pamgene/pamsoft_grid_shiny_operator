@@ -821,7 +821,7 @@ prep_image_folder <- function(session, docIdCols){
     a.names <- f.names.b
 
     
-    progress$set(message=f.names  )
+    progress$set(message=paste0( unique(unlist(docIds[1])), '  :  ', f.names.a )  )
     stop('check')
     if(length(f.names) == 0 ){
       f.names <- grep('*/ImageResults/*', f.names.b, value = TRUE )
