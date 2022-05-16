@@ -75,7 +75,7 @@ shinyServer(function(input, output, session) {
     paste0("Mode is: ", mode() ) 
   })
 
-  props     <- reactive({get_operator_props(getCtx(session), imgInfo()[1])})
+  props     <- reactive({get_operator_props(getCtx(session), imgInfo())})
   
   output$selectedImage <- renderImage({
     req(imgInfo)
@@ -831,7 +831,6 @@ prep_image_folder <- function(session, docIdCols){
     }
 
     imageResultsPath <- dirname(f.names[1])
-
     fext <- file_ext(f.names[1])
     layoutDir <- dirname(a.names[1])
 
@@ -848,7 +847,10 @@ prep_image_folder <- function(session, docIdCols){
 }
 
 
-get_operator_props <- function(ctx, imagesFolder){
+get_operator_props <- function(ctx, imgInfo){
+  imagesFolder <- imgInfo[1]
+  
+  
   sqcMinDiameter     <- 0.45
   sqcMaxDiameter     <- 0.85
   grdSpotPitch       <- 0
@@ -932,16 +934,8 @@ get_operator_props <- function(ctx, imagesFolder){
   props$isDiagnostic <- isDiagnostic
 
   # Get array layout
-  layoutDirParts <- str_split_fixed(imagesFolder, "/", Inf)
-  nParts  <- length(layoutDirParts) -1 # Layout is in parent folder
-
-  layoutDir = ''
-
-  for( i in 1:nParts){
-    layoutDir <- paste(layoutDir, layoutDirParts[i], sep = "/")
-  }
-  layoutDir <- paste(layoutDir, "*Layout*", sep = "/")
-
+  
+  layoutDir <- paste(imgInfo[3], "*Layout*", sep = "/")
   props$arraylayoutfile <- Sys.glob(layoutDir)
 
 
