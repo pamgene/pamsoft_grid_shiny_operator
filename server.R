@@ -799,6 +799,7 @@ prep_image_folder <- function(session, docIdCols){
   ctx <- getCtx(session)
   show_modal_spinner(spin="fading-circle", text = "Loading data")
   
+  progress$set(message=paste0( length(docIdCols), " documentId columns")  )
   
   if(length(docIdCols) == 1){
     docIds <- ctx$cselect(docIdCols)
@@ -811,15 +812,21 @@ prep_image_folder <- function(session, docIdCols){
     fext <- file_ext(f.names[1])
     res <- (list(imageResultsPath, fext, layoutDir))
   }else{
+    progress$set(message="Loading files"  )
+    
     
     docIds <- ctx$cselect(docIdCols)
 
     f.names.a <- tim::load_data(ctx, unique(unlist(docIds[1])) )
     f.names.b <- tim::load_data(ctx, unique(unlist(docIds[2])) )
+    
+    progress$set(message="Done. Grepping"  )
 
     f.names <- grep('*/ImageResults/*', f.names.a, value = TRUE )
     a.names <- f.names.b
 
+    progress$set(message=paste0("Found ", length(f.names)," images")  )
+    
     if(length(f.names) == 0 ){
       f.names <- grep('*/ImageResults/*', f.names.b, value = TRUE )
       a.names <- f.names.a
@@ -937,7 +944,6 @@ get_operator_props <- function(ctx, imgInfo){
   
   layoutDir <- paste(imgInfo[3], "*Layout*", sep = "/")
   props$arraylayoutfile <- Sys.glob(layoutDir)
-
 
 
   return (props)
