@@ -812,32 +812,27 @@ prep_image_folder <- function(session, docIdCols){
     fext <- file_ext(f.names[1])
     res <- (list(imageResultsPath, fext, layoutDir))
   }else{
-    progress$set(message="Loading files"  )
-    
-    
     docIds <- ctx$cselect(docIdCols)
 
     f.names.a <- tim::load_data(ctx, unique(unlist(docIds[1])) )
     f.names.b <- tim::load_data(ctx, unique(unlist(docIds[2])) )
     
-    progress$set(message="Done. Grepping"  )
-
     f.names <- grep('*/ImageResults/*', f.names.a, value = TRUE )
     a.names <- f.names.b
 
     progress$set(message=paste0("Found ", length(f.names)," images")  )
     
     if(length(f.names) == 0 ){
-      progress$set(message="TRying again"  )
       f.names <- grep('*/ImageResults/*', f.names.b, value = TRUE )
       a.names <- f.names.a
-      progress$set(message=paste0("[B] Found ", length(f.names)," images")  )
     }
 
     if(length(f.names) == 0 ){
-      progress$set(message=paste0("No 'ImageResults/' path found within provided files. ",
-                          length(f.names), length(a.names)    ) )
-    
+      progress$set(message="No 'ImageResults/' path found within provided files.")
+      
+      progress$set(message=paste0(unique(unlist(docIds[1])),
+                                  '  -  ',
+                                  unique(unlist(docIds[2]))))
 
     }
 
