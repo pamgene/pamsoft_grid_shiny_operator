@@ -17,9 +17,9 @@ library(tools)
 library(stringi)
 
 
-# http://127.0.0.1:5402/test-team/w/cc41c236da58dcb568c6fe1a320140d2/ds/b8702800-a545-40dd-853c-0c66ca701c80
-# options("tercen.workflowId"= "cc41c236da58dcb568c6fe1a320140d2")
-# options("tercen.stepId"= "b8702800-a545-40dd-853c-0c66ca701c80")
+# http://127.0.0.1:5402/test-team/w/8ef9012b2d2f050214e16189ba0406b4/ds/032404ca-b2af-4f67-8806-6bd0ffa8fff5/wa
+#options("tercen.workflowId"= "8ef9012b2d2f050214e16189ba0406b4")
+#options("tercen.stepId"= "032404ca-b2af-4f67-8806-6bd0ffa8fff5")
 
 # http://127.0.0.1:5402/test-team/w/8ef9012b2d2f050214e16189ba0406b4/ds/a73a2842-ff0a-4db3-8f7e-cd5ce72bdb67
 # options("tercen.workflowId"= "8ef9012b2d2f050214e16189ba0406b4")
@@ -789,6 +789,7 @@ get_data <- function( session ){
 
 
 prep_image_folder <- function(session, docIdCols){
+  
   docIdCols <- docIdCols()
   progress <- Progress$new(session, min=1, max=1)
   
@@ -798,7 +799,7 @@ prep_image_folder <- function(session, docIdCols){
   ctx <- getCtx(session)
   show_modal_spinner(spin="fading-circle", text = "Loading data")
   
-
+  
   if(length(docIdCols) == 1){
     docIds <- ctx$cselect(docIdCols)
 
@@ -810,10 +811,11 @@ prep_image_folder <- function(session, docIdCols){
     fext <- file_ext(f.names[1])
     res <- (list(imageResultsPath, fext, layoutDir))
   }else{
+    out <- tryCatch({
     docIds <- ctx$cselect(docIdCols)
 
     f.names.a <- tim::load_data(ctx, unique(unlist(docIds[1])) )
-    f.names.b <- tim::load_data(ctx, unique(unlist(docIds[2])))
+    f.names.b <- tim::load_data(ctx, unique(unlist(docIds[2])) )
 
     f.names <- grep('*/ImageResults/*', f.names.a, value = TRUE )
     a.names <- f.names.b
@@ -824,7 +826,7 @@ prep_image_folder <- function(session, docIdCols){
     }
 
     if(length(f.names) == 0 ){
-      stop("No ImageResults/ path found within provided files.")
+      stop("No 'ImageResults/' path found within provided files.")
     }
 
     imageResultsPath <- dirname(f.names[1])
@@ -833,6 +835,12 @@ prep_image_folder <- function(session, docIdCols){
     layoutDir <- dirname(a.names[1])
 
     res <- list(imageResultsPath, fext, layoutDir)
+    },error=function(e){
+      progress$close()
+      showNotification(e)
+      stop( e )
+    })
+    res<-''
   }
 
   progress$close()
