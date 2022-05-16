@@ -828,13 +828,17 @@ prep_image_folder <- function(session, docIdCols){
     progress$set(message=paste0("Found ", length(f.names)," images")  )
     
     if(length(f.names) == 0 ){
+      progress$set(message="TRying again"  )
       f.names <- grep('*/ImageResults/*', f.names.b, value = TRUE )
       a.names <- f.names.a
+      progress$set(message=paste0("[B] Found ", length(f.names)," images")  )
     }
 
     if(length(f.names) == 0 ){
-      progress$set(paste0("No 'ImageResults/' path found within provided files. ",
-                          length(f.names)    ) )
+      progress$set(message=paste0("No 'ImageResults/' path found within provided files. ",
+                          length(f.names), length(a.names)    ) )
+    
+
     }
 
     imageResultsPath <- dirname(f.names[1])
