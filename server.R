@@ -18,8 +18,8 @@ library(stringi)
 
 
 # http://127.0.0.1:5402/test-team/w/8ef9012b2d2f050214e16189ba0406b4/ds/032404ca-b2af-4f67-8806-6bd0ffa8fff5/wa
-#options("tercen.workflowId"= "8ef9012b2d2f050214e16189ba0406b4")
-#options("tercen.stepId"= "032404ca-b2af-4f67-8806-6bd0ffa8fff5")
+# options("tercen.workflowId"= "8ef9012b2d2f050214e16189ba0406b4")
+# options("tercen.stepId"= "032404ca-b2af-4f67-8806-6bd0ffa8fff5")
 
 # http://127.0.0.1:5402/test-team/w/8ef9012b2d2f050214e16189ba0406b4/ds/a73a2842-ff0a-4db3-8f7e-cd5ce72bdb67
 # options("tercen.workflowId"= "8ef9012b2d2f050214e16189ba0406b4")
@@ -811,7 +811,7 @@ prep_image_folder <- function(session, docIdCols){
     fext <- file_ext(f.names[1])
     res <- (list(imageResultsPath, fext, layoutDir))
   }else{
-    out <- tryCatch({
+    
     docIds <- ctx$cselect(docIdCols)
 
     f.names.a <- tim::load_data(ctx, unique(unlist(docIds[1])) )
@@ -834,13 +834,9 @@ prep_image_folder <- function(session, docIdCols){
     fext <- file_ext(f.names[1])
     layoutDir <- dirname(a.names[1])
 
-    res <- list(imageResultsPath, fext, layoutDir)
-    },error=function(e){
-      progress$close()
-      showNotification(e)
-      stop( e )
-    })
-    res<-''
+    res <- (list(imageResultsPath, fext, layoutDir))
+    
+    
   }
 
   progress$close()
