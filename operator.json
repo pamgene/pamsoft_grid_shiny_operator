@@ -9,7 +9,7 @@
     {
       "kind": "DoubleProperty",
       "name": "Min Diamete",
-      "defaultValue": 0.45",
+      "defaultValue": 0.45,
       "description": "",
       "values": {}
     },
