@@ -17,9 +17,11 @@ library(tools)
 library(stringi)
 
 
-# http://127.0.0.1:5402/test-team/w/8ef9012b2d2f050214e16189ba0406b4/ds/032404ca-b2af-4f67-8806-6bd0ffa8fff5/wa
-# options("tercen.workflowId"= "8ef9012b2d2f050214e16189ba0406b4")
-# options("tercen.stepId"= "032404ca-b2af-4f67-8806-6bd0ffa8fff5")
+# https://bionavigator.pamgene.com/PamGene2Tercen/w/ab6eabfdfbd56dd117354acb4c9bcc07/ds/92e32d63-e9c4-4faa-80e7-d4edb1dcbf38
+#options("tercen.workflowId"= "ab6eabfdfbd56dd117354acb4c9bcc07")
+#options("tercen.stepId"= "92e32d63-e9c4-4faa-80e7-d4edb1dcbf38")
+#options("tercen.serviceUri"=Sys.getenv("TERCEN_SERVICE_URI"))
+#options("tercen.authToken"=Sys.getenv("TERCEN_SERVICE_URI"))
 
 
 ############################################
@@ -181,8 +183,8 @@ shinyServer(function(input, output, session) {
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = Y
     
     # Needs to go through position refinement after segmentation 
-    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdXFixedPosition"] = 0
-    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdYFixedPosition"] = 0
+    # data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdXFixedPosition"] = 0
+    # data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdYFixedPosition"] = 0
 
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "manual"] = 1
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "bad"]    = 0
