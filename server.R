@@ -16,13 +16,12 @@ library(tools)
 
 library(stringi)
 
-
-# https://bionavigator.pamgene.com/PamGene2Tercen/w/ab6eabfdfbd56dd117354acb4c9bcc07/ds/92e32d63-e9c4-4faa-80e7-d4edb1dcbf38
-#options("tercen.workflowId"= "ab6eabfdfbd56dd117354acb4c9bcc07")
-#options("tercen.stepId"= "92e32d63-e9c4-4faa-80e7-d4edb1dcbf38")
-#options("tercen.serviceUri"=Sys.getenv("TERCEN_SERVICE_URI"))
-#options("tercen.authToken"=Sys.getenv("TERCEN_SERVICE_URI"))
-
+#https://bionavigator.pamgene.com/PamGene2Tercen/w/ab6eabfdfbd56dd117354acb4c9daa71/ds/92e32d63-e9c4-4faa-80e7-d4edb1dcbf38
+# https://bionavigator.pamgene.com/tsmonteiro/w/566d02ba76c109ebb25f7818bfb14535/ds/92e32d63-e9c4-4faa-80e7-d4edb1dcbf38
+# https://bionavigator.pamgene.com/tsmonteiro/w/566d02ba76c109ebb25f7818bfb14535/ds/314d90e1-504e-498b-a60f-40d1a3a800e1
+#options("tercen.workflowId"= "2cfba5a8627d206f5fe7e462fe168604")
+#options("tercen.stepId"= "314d90e1-504e-498b-a60f-40d1a3a800e1")
+#options("token"="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3RlcmNlbi5jb20iLCJleHAiOjE3NjA2NDI3MTMsImRhdGEiOnsiZCI6IiIsInUiOiJ0aGlhZ28ubW9udGVpcm8iLCJlIjoxNzYwNjQyNzEzMzQ1fX0.MlZqUGgo4JhojZfoRyOEaZVt_wS5sOuVrMe8oqWgwUw")
 
 ############################################
 #### This part should not be modified
@@ -34,6 +33,7 @@ getCtx <- function(session) {
   
   # create a Tercen context object using the token
   ctx <- tercenCtx(taskId = taskId, authToken = token)
+  
   return(ctx)
 }
 ####
@@ -183,8 +183,8 @@ shinyServer(function(input, output, session) {
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = Y
     
     # Needs to go through position refinement after segmentation 
-    # data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdXFixedPosition"] = 0
-    # data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdYFixedPosition"] = 0
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdXFixedPosition"] = X
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdYFixedPosition"] = Y
 
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "manual"] = 1
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "bad"]    = 0
