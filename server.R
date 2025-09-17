@@ -17,9 +17,8 @@ library(tools)
 library(stringi)
 
 
-# http://127.0.0.1:5402/test-team/w/8ef9012b2d2f050214e16189ba0406b4/ds/032404ca-b2af-4f67-8806-6bd0ffa8fff5/wa
-# options("tercen.workflowId"= "8ef9012b2d2f050214e16189ba0406b4")
-# options("tercen.stepId"= "032404ca-b2af-4f67-8806-6bd0ffa8fff5")
+#options("tercen.workflowId"= "")
+#options("tercen.stepId"= "")
 
 
 ############################################
@@ -32,6 +31,7 @@ getCtx <- function(session) {
   
   # create a Tercen context object using the token
   ctx <- tercenCtx(taskId = taskId, authToken = token)
+  
   return(ctx)
 }
 ####
@@ -181,8 +181,8 @@ shinyServer(function(input, output, session) {
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "gridY"] = Y
     
     # Needs to go through position refinement after segmentation 
-    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdXFixedPosition"] = 0
-    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdYFixedPosition"] = 0
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdXFixedPosition"] = X
+    data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "grdYFixedPosition"] = Y
 
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "manual"] = 1
     data$.y[df$data$grdImageNameUsed == gridSpotList$gridList[[gridSpotList$selectedGrid]] & df$data$variable == "bad"]    = 0
