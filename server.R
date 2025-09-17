@@ -16,12 +16,10 @@ library(tools)
 
 library(stringi)
 
-#https://bionavigator.pamgene.com/PamGene2Tercen/w/ab6eabfdfbd56dd117354acb4c9daa71/ds/92e32d63-e9c4-4faa-80e7-d4edb1dcbf38
-# https://bionavigator.pamgene.com/tsmonteiro/w/566d02ba76c109ebb25f7818bfb14535/ds/92e32d63-e9c4-4faa-80e7-d4edb1dcbf38
-# https://bionavigator.pamgene.com/tsmonteiro/w/566d02ba76c109ebb25f7818bfb14535/ds/314d90e1-504e-498b-a60f-40d1a3a800e1
-#options("tercen.workflowId"= "2cfba5a8627d206f5fe7e462fe168604")
-#options("tercen.stepId"= "314d90e1-504e-498b-a60f-40d1a3a800e1")
-#options("token"="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3RlcmNlbi5jb20iLCJleHAiOjE3NjA2NDI3MTMsImRhdGEiOnsiZCI6IiIsInUiOiJ0aGlhZ28ubW9udGVpcm8iLCJlIjoxNzYwNjQyNzEzMzQ1fX0.MlZqUGgo4JhojZfoRyOEaZVt_wS5sOuVrMe8oqWgwUw")
+
+#options("tercen.workflowId"= "")
+#options("tercen.stepId"= "")
+
 
 ############################################
 #### This part should not be modified
